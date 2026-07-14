@@ -1,0 +1,3246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Nexus AI — Vistas por Vertical (Mockup)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0a10;
+    --bg-2:#0d0d14;
+    --sidebar:#111119;
+    --card:#16161f;
+    --card-2:#1b1b26;
+    --border:#26262f;
+    --accent:#8b5cf6;
+    --accent-soft:rgba(139,92,246,.14);
+    --text:#eceaf2;
+    --text-dim:#8d8d9a;
+    --text-dim2:#5f5f6d;
+    --green:#22c55e;
+    --gray:#9ca3af;
+    --blue:#3b82f6;
+    --pink:#ec4899;
+    --orange:#f97316;
+    --red:#ef4444;
+    --yellow:#eab308;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    min-height:100vh;
+    font-size:14px;
+  }
+  a{color:inherit;}
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:238px;
+    flex-shrink:0;
+    background:var(--sidebar);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:20px 14px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 22px 8px;}
+  .brand .logo{
+    width:32px;height:32px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),#5b3bd6);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:15px;color:#fff;
+  }
+  .brand .name{font-weight:700;font-size:16px;letter-spacing:.2px;}
+  .brand .sub{font-size:10.5px;color:var(--text-dim);margin-top:1px;}
+  .nav-section-title{
+    font-size:10.5px;color:var(--text-dim2);text-transform:uppercase;
+    letter-spacing:.08em;margin:14px 10px 8px 10px;font-weight:600;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 10px;border-radius:9px;cursor:pointer;
+    color:var(--text-dim);font-size:13.5px;font-weight:500;
+    border:1px solid transparent;
+    margin-bottom:2px;
+    transition:background .12s,color .12s;
+  }
+  .nav-item:hover{background:#1a1a24;color:var(--text);}
+  .nav-item.active{
+    background:var(--accent-soft);
+    color:var(--text);
+    border-color:rgba(139,92,246,.35);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .nav-item .kpi-count{margin-left:auto;font-size:10.5px;color:var(--text-dim2);}
+  .sidebar-footer{margin-top:auto;padding:12px 10px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim2);line-height:1.5;}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+  .topbar{
+    padding:18px 28px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+    background:linear-gradient(180deg,var(--bg-2),var(--bg));
+  }
+  .topbar h1{margin:0;font-size:19px;font-weight:700;}
+  .topbar .desc{font-size:12.5px;color:var(--text-dim);margin-top:3px;}
+  .badge-mock{
+    font-size:10.5px;color:var(--text-dim);background:var(--card);
+    border:1px solid var(--border);padding:4px 10px;border-radius:20px;
+    display:flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .badge-mock .pulse{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
+  .content{flex:1;overflow-y:auto;padding:22px 28px 60px 28px;}
+
+  /* filter bar */
+  .filterbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    margin-bottom:20px;
+  }
+  .filterbar select, .filterbar input{
+    background:var(--card);border:1px solid var(--border);color:var(--text);
+    padding:7px 10px;border-radius:8px;font-size:12.5px;font-family:inherit;
+  }
+  .filterbar select:hover, .filterbar input:hover{border-color:#3a3a46;}
+  .filterbar label{font-size:11px;color:var(--text-dim2);margin-right:-4px;}
+  .filterbar .fgroup{display:flex;align-items:center;gap:6px;}
+
+  /* standalone form fields (outside filterbar) */
+  .form-field{display:flex;flex-direction:column;gap:5px;}
+  .form-field label{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.02em;}
+  .form-select, .form-input{
+    background:var(--bg-2);border:1px solid var(--border);color:var(--text);
+    padding:9px 12px;border-radius:8px;font-size:12.5px;font-family:inherit;width:100%;
+  }
+  .form-select:hover, .form-input:hover{border-color:#3a3a46;}
+  .form-select:focus, .form-input:focus{outline:none;border-color:var(--accent);}
+
+  /* subtabs */
+  .subtabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+  .subtab{
+    padding:9px 14px;font-size:12.5px;color:var(--text-dim);cursor:pointer;
+    border-bottom:2px solid transparent;font-weight:500;
+  }
+  .subtab:hover{color:var(--text);}
+  .subtab.active{color:var(--text);border-bottom-color:var(--accent);}
+
+  /* section title */
+  .section-title{font-size:13px;font-weight:600;color:var(--text);margin:26px 0 12px 0;display:flex;align-items:center;gap:8px;}
+  .section-title .tag{font-size:10px;font-weight:600;color:var(--text-dim);background:var(--card);border:1px solid var(--border);padding:2px 8px;border-radius:20px;}
+  .section-title:first-child{margin-top:0;}
+
+  /* kpi grid */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;}
+  .kpi-card{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:14px 16px;
+  }
+  .kpi-card .label{font-size:11.5px;color:var(--text-dim);margin-bottom:8px;}
+  .kpi-card .value{font-size:20px;font-weight:700;letter-spacing:-.2px;}
+  .kpi-card .delta{font-size:11px;margin-top:6px;display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;}
+  .delta.up{color:var(--green);background:rgba(34,197,94,.12);}
+  .delta.down{color:var(--red);background:rgba(239,68,68,.12);}
+  .delta.flat{color:var(--text-dim);background:#20202a;}
+
+  /* two-col layout */
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;}
+  .grid-2-stretch{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:stretch;}
+  .grid-2-stretch>.panel{display:flex;flex-direction:column;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start;}
+  @media(max-width:1100px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+  .panel h3{margin:0 0 3px 0;font-size:13.5px;font-weight:600;}
+  .panel .panel-sub{font-size:11.5px;color:var(--text-dim);margin-bottom:14px;}
+  .chart-wrap{position:relative;height:220px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;color:var(--text-dim2);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);}
+  td{padding:9px 10px;border-bottom:1px solid #1c1c26;color:var(--text);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#1a1a24;}
+  .table-compact{table-layout:auto;}
+  .table-compact th, .table-compact td{padding:3px 8px;line-height:1.25;white-space:nowrap;}
+  .table-compact td:first-child, .table-compact th:first-child{white-space:nowrap;}
+  .pill{padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;display:inline-block;}
+  .pill.green{color:var(--green);background:rgba(34,197,94,.12);}
+  .pill.red{color:var(--red);background:rgba(239,68,68,.12);}
+  .pill.orange{color:var(--orange);background:rgba(249,115,22,.12);}
+  .pill.blue{color:var(--blue);background:rgba(59,130,246,.12);}
+  .pill.gray{color:var(--text-dim);background:#20202a;}
+  .pill.pink{color:var(--pink);background:rgba(236,72,153,.14);}
+
+  .legend-row{display:flex;gap:16px;align-items:center;font-size:11.5px;color:var(--text-dim);margin-top:10px;}
+  .legend-row .sw{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;}
+
+  /* map */
+  .map-wrap{position:relative;min-height:340px;flex:1;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:
+    radial-gradient(circle at 20% 30%, #171722 0, transparent 45%),
+    radial-gradient(circle at 80% 70%, #171722 0, transparent 45%),
+    repeating-linear-gradient(0deg, #131319 0 1px, #0e0e14 1px 46px),
+    repeating-linear-gradient(90deg, #131319 0 1px, #0e0e14 1px 46px);
+  }
+  .pin{position:absolute;width:11px;height:11px;border-radius:50% 50% 50% 0;transform:translate(-50%,-100%) rotate(-45deg);cursor:pointer;border:1.5px solid rgba(0,0,0,.4);}
+  .pin.direct{background:var(--green);}
+  .pin.indirect{background:var(--orange);}
+  .pin:hover{outline:2px solid #fff;outline-offset:2px;}
+  .pin .tip{
+    display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%) rotate(45deg);
+    background:#000000;border:1px solid var(--border);color:#fff;font-size:10.5px;padding:5px 8px;
+    border-radius:6px;white-space:nowrap;z-index:5;
+  }
+  .pin:hover .tip{display:block;}
+
+  /* rgm simulator */
+  .simbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:16px;}
+  .simfield{display:flex;flex-direction:column;gap:5px;}
+  .simfield label{font-size:10.5px;color:var(--text-dim2);text-transform:uppercase;letter-spacing:.04em;}
+  .simfield select, .simfield input{background:var(--bg-2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:12.5px;min-width:130px;font-family:inherit;}
+  .toggle-group{display:flex;gap:4px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:3px;}
+  .toggle-opt{padding:6px 10px;border-radius:6px;font-size:11.5px;cursor:pointer;color:var(--text-dim);}
+  .toggle-opt.active{background:var(--accent);color:#fff;}
+  .btn{
+    background:linear-gradient(135deg,var(--accent),#6d3fe0);color:#fff;border:none;
+    padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn.secondary{background:var(--card);border:1px solid var(--border);color:var(--text);}
+  .btn.secondary:hover{border-color:#3a3a46;}
+  .btn:disabled{opacity:.5;cursor:default;}
+
+  .ia-card{
+    border:1px solid rgba(139,92,246,.4);background:linear-gradient(180deg,rgba(139,92,246,.09),rgba(139,92,246,.02));
+    border-radius:12px;padding:18px;margin-top:16px;
+  }
+  .ia-card .ia-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .ia-card .ia-head .ico{width:22px;height:22px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .ia-card .ia-head b{font-size:13px;}
+  .ia-card .rationale{font-size:12.5px;color:#d8d5e6;line-height:1.55;background:rgba(0,0,0,.18);border-radius:8px;padding:12px 14px;margin-bottom:14px;}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:12.5px;}
+  .empty-state .ico{font-size:26px;margin-bottom:10px;}
+
+  .basket-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c1c26;font-size:12px;}
+  .basket-row:last-child{border-bottom:none;}
+  .basket-bar{flex:1;height:6px;border-radius:4px;background:#20202a;overflow:hidden;}
+  .basket-bar span{display:block;height:100%;background:var(--accent);}
+  .foot-note{font-size:11px;color:var(--text-dim2);margin-top:14px;line-height:1.5;}
+
+  .pill-badge{width:215px;text-align:center;justify-content:center;white-space:nowrap;}
+  .chip{padding:7px 12px;border-radius:20px;background:var(--card-2);border:1px solid var(--border);font-size:12px;color:var(--text-dim);cursor:pointer;}
+  .chip:hover{border-color:var(--accent);color:var(--text);}
+  .chip.active-chip{background:var(--accent-soft);border-color:rgba(139,92,246,.5);color:var(--text);}
+  .chat-input-row{display:flex;gap:8px;}
+  .chat-input-row input{flex:1;background:var(--bg-2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:12.5px;font-family:inherit;}
+  .chat-input-row input:focus{outline:none;border-color:var(--accent);}
+  .chat-thread{margin-top:16px;display:flex;flex-direction:column;gap:12px;}
+  .chat-msg{padding:12px 14px;border-radius:10px;font-size:12.5px;line-height:1.6;}
+  .chat-msg.chat-user{background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);align-self:flex-end;max-width:70%;}
+  .chat-msg.chat-ai{background:var(--bg-2);border:1px solid var(--border);}
+  .nexus-block{margin-bottom:12px;}
+  .nexus-block:last-child{margin-bottom:0;}
+  .nb-tag{font-size:10.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px;}
+  .nexus-block p{margin:0;color:var(--text);}
+  .nexus-block ul{margin:4px 0 0 0;padding-left:18px;color:var(--text);}
+  .nexus-block li{margin-bottom:4px;}
+  .month-delta-strip{display:flex;justify-content:space-between;gap:4px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
+  .mds-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+  .mds-m{font-size:10px;color:var(--text-dim2);}
+  .mds-v{font-size:11px;font-weight:700;}
+  .mds-v.up{color:var(--green);}
+  .mds-v.down{color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">
+    <div class="logo">N</div>
+    <div>
+      <div class="name">Nexus AI</div>
+      <div class="sub">Vistas por vertical</div>
+    </div>
+  </div>
+  <div class="nav-section-title">Verticales</div>
+  <div id="nav" ></div>
+  <div class="sidebar-footer">
+    Mockup interactivo con datos ilustrativos.<br>Cambiá los filtros para ver cómo reaccionan los KPIs.
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h1 id="viewTitle">Ventas</h1>
+      <div class="desc" id="viewDesc">Información 100% ERP: lo que la empresa le vende a sus clientes.</div>
+    </div>
+    <div class="badge-mock"><span class="pulse"></span> Datos ilustrativos · para revisión de diseño</div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ============================= DATA MODEL ============================= */
+const VERTICALS = [
+  {id:'ventas', label:'Ventas', color:'var(--green)', desc:'Información 100% ERP: lo que la empresa le vende a sus clientes.'},
+  {id:'sellthrough', label:'Sell-Through', color:'var(--gray)', desc:'Sell-in (ERP) + sell-out (distribuidores/cadenas) + mercado (Nielsen/Scentia) + mapa de clientes.'},
+  {id:'finanzas', label:'Finanzas', color:'var(--blue)', desc:'P&L, capital de trabajo, inventario de insumos, cobranzas y deuda.'},
+  {id:'rgm', label:'RGM', color:'var(--pink)', desc:'Revenue Growth Management: vista consolidada + simulador de dinámica promocional.'},
+];
+
+const PERIODOS = ['Jul 2026 (MTD)','Jun 2026','Q2 2026','FY2026','Presupuesto'];
+const CANALES  = ['Todos los canales','Moderno','Tradicional','E-commerce','Mayorista','On Premise'];
+const REGIONES = ['Todas las regiones','CABA','GBA Norte','GBA Sur','Interior'];
+const SKUS     = ['Todos los SKU','Producto A 500g','Producto A 1kg','Producto B Pack x6','Producto C Premium','Producto D Económico'];
+const CLIENTES_SIM = ['Toda la cartera','Cadena Metro','Hiper Andes','Distribuidora Norte','Mayorista Sur','Super Regional'];
+const CLIENTES    = ['Todos los clientes','Cadena Metro','Hiper Andes','Distribuidora Norte','Mayorista Sur','Super Regional','Distribuidora Litoral'];
+const CATEGORIAS  = ['Todas las categorías','Categoría Foco','Categoría 2','Categoría 3'];
+const SEGMENTOS   = ['Todos los segmentos','Premium','Core','Económico'];
+const PRODUCTOS   = ['Todos los productos','Producto A 500g','Producto A 1kg','Producto B Pack x6','Producto C Premium','Producto D Económico'];
+const VENDEDORES  = ['Todos los vendedores','Vendedor 1','Vendedor 2','Vendedor 3','Vendedor 4'];
+const UNIDADES    = ['Kilos','Toneladas','Unidades','Litros','Cajas'];
+const DISTRIBUIDORES = ['Todos los distribuidores','Distribuidora Norte SA','Bebidas Elite','Distribuidora Litoral','Mayorista Sur'];
+const CLIENTES_SELLOUT = ['Todos los clientes sell-out','Carrefour','Coto','Jumbo/Cencosud','Walmart/Changomas','Almacén Independiente','Kiosco/Autoservicio'];
+const RGM_DINAMICAS = ['Precio especial','Descuento porcentual','Combo','Bonificación','2x1 / segunda unidad'];
+const RGM_OBJETIVOS = ['Recuperar volumen','Defender share de mercado','Activar PDVs inactivos','Liquidar stock excedente','Acompañar lanzamiento','Contrarrestar acción de competencia'];
+const RGM_DESC_TIPOS = ['Desc. Comercial','Desc. Financiero (PP)','Desc. Logístico','Desc. Promocional','Desc. por Volumen'];
+const UM_META = {
+  'Kilos':      {volFactor:1,     priceFactor:1,    dec:0, suf:'kg'},
+  'Toneladas':  {volFactor:0.001, priceFactor:1000, dec:1, suf:'Tn'},
+  'Unidades':   {volFactor:2.15,  priceFactor:0.46, dec:0, suf:'u'},
+  'Litros':     {volFactor:1.03,  priceFactor:0.97, dec:0, suf:'L'},
+  'Cajas':      {volFactor:0.083, priceFactor:12,   dec:0, suf:'caja'},
+};
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul'];
+const PDVS_MAPA = [
+  {n:'Carrefour Palermo', canal:'Supermercado', dist:'Distribuidora Norte SA'},
+  {n:'Café Botánico Norte', canal:'Gastronomía', dist:'Bebidas Elite'},
+  {n:'Mini Soho Market', canal:'Minimarket', dist:'Bebidas Elite'},
+  {n:'Café Serrano', canal:'Gastronomía', dist:'Bebidas Elite'},
+  {n:'Market Dorrego', canal:'Minimarket', dist:'Distribuidora Norte SA'},
+  {n:'Almacén Nicaragua', canal:'Almacén', dist:'Distribuidora Norte SA'},
+  {n:'Autoservicio Honduras', canal:'Almacén', dist:'Distribuidora Norte SA'},
+  {n:'Almacén Güemes', canal:'Almacén', dist:'Bebidas Elite'},
+];
+const PRODUCTOS_MAPA = [
+  {n:'Espumante Brut 750ml', cat:'Espumantes'},
+  {n:'Aperitivo de Hierbas 700ml', cat:'Aperitivos'},
+  {n:'Gin Botánico Premium 750ml', cat:'Destilados'},
+  {n:'Cerveza Artesanal IPA 473ml', cat:'Cervezas'},
+  {n:'Vino Malbec Reserva 750ml', cat:'Vinos'},
+];
+function monthlySeries(base, seedBase, trend, spread){
+  return MESES.map((m,i)=> vary(base*(1+(i-6)*trend), seedBase+m, spread));
+}
+
+let filters = { periodo: PERIODOS[0], canal: CANALES[0], region: REGIONES[0], cliente: CLIENTES[0], categoria: CATEGORIAS[0], segmento: SEGMENTOS[0], producto: PRODUCTOS[0], um: UNIDADES[0], vendedor: VENDEDORES[0], distribuidor: DISTRIBUIDORES[0] };
+let current = 'ventas';
+let sellthroughTab = 'sellout';
+let rankingDim = 'cliente';
+let windowDim = 'producto';
+let agingDim = 'cliente';
+let chatMessages = [];
+let finChatMessages = [];
+const FIN_CHAT_SUGGESTIONS = [
+  '¿Qué está explicando la caída de EBITDA?',
+  '¿Cuál es el cliente con mayor deuda vencida?',
+  '¿Cómo viene el ciclo de conversión de efectivo?',
+];
+let mapZones = [];
+let drawingZone = false;
+let currentZonePoints = [];
+let mapaAnalysisTab = 'pdvs';
+let pdvSelected = new Set();
+let pdvGrupos = [];
+let pdvGrupoNombreDraft = '';
+let oportSkuTestigo = PRODUCTOS_MAPA[2].n;
+let oportSkuObjetivo = PRODUCTOS_MAPA[0].n;
+let promoForm = {
+  nombre: 'Activación SKU objetivo en zona seleccionada',
+  mecanica: 'Precio especial',
+  duracion: 4,
+  precioActual: 50,
+  precioPromo: 45,
+  volumenPorPdv: 36,
+  pdvsObjetivo: 12,
+  margenObjetivo: 34,
+  hipotesis: 'Convertir PDVs que ya compran el SKU testigo con una oferta acotada, cuidando margen.',
+};
+let mapaChatMessages = { pdvs: [], mix: [], oportunidad: [], activacion: [] };
+const MAPA_CHAT_SUGGESTIONS = {
+  pdvs: ['¿Qué PDVs tienen mayor GAP de oportunidad?', '¿Qué distribuidor tiene más PDVs sin activar?', '¿Qué canal tiene menor cobertura?'],
+  mix: ['¿Qué SKU está más lejos del mix objetivo?', '¿Qué productos tienen mejor tendencia?', '¿Dónde conviene reforzar distribución numérica?'],
+  oportunidad: ['¿Cuál es la oportunidad total de la zona?', '¿Qué PDV conviene activar primero?', '¿Cuánto volumen podemos capturar este mes?'],
+  activacion: ['¿Cómo viene el ROI de la promo activa?', '¿Qué promo está más desviada del plan?', '¿Conviene extender la duración de la promo?'],
+};
+let rgmSim = {
+  sku: SKUS[0], canal: CANALES[0], region: REGIONES[0], cliente: CLIENTES_SIM[0], clienteSellOut: CLIENTES_SELLOUT[0],
+  periodo: PERIODOS[0], budget: 4500000, tipo: RGM_DINAMICAS[0], precioObj:'', grupoPdvId: null,
+  objetivo: RGM_OBJETIVOS[0], caracteristicas: '15% off en segunda unidad, tope 200 cajas por PDV', hipotesis: 'Recuperar volumen en PDVs con caída de compra reciente sin resignar margen objetivo.',
+};
+let iaResult = null;
+let rgmDinamicas = [
+  {n:'Descuento activación GBA', cl:'Distribuidora Norte', estado:'En curso', vsObj:94, roi:1.6},
+  {n:'Up-selling Pack x6', cl:'Cadena Metro', estado:'En curso', vsObj:108, roi:2.1},
+  {n:'Cross-sell Línea Premium', cl:'Hiper Andes', estado:'Planificada', vsObj:0, roi:0},
+  {n:'Descuento fin de mes', cl:'Mayorista Sur', estado:'Finalizada', vsObj:101, roi:1.3},
+];
+let rgmChatMessages = [];
+const RGM_CHAT_SUGGESTIONS = [
+  '¿Dónde conviene invertir el budget promocional este mes?',
+  '¿Qué cliente tiene el descuento más alto sin resultado?',
+  '¿Cómo viene el ROI de las dinámicas activas?',
+];
+let rgmPriceForm = { sku: SKUS[1], precioActual: 2350, inflacion: 4.2, costoReposicion: 6.5, precioCompetencia: 2280, margenBrutoAsumido: 42, margenObjetivo: 32 };
+let rgmPriceResult = null;
+const RGM_ELAST_CATEGORIAS = [
+  {id:'commodity', label:'Commodity / básico (leche, azúcar, aceite)', min:-0.8, max:-0.3, sug:-0.5},
+  {id:'lider', label:'Marca líder consolidada', min:-1.2, max:-0.7, sug:-0.9},
+  {id:'challenger', label:'Marca challenger / segunda marca', min:-2.0, max:-1.2, sug:-1.6},
+  {id:'discrecional', label:'Discrecional / impulso / snacking', min:-3.5, max:-2.0, sug:-2.6},
+];
+let rgmElastForm = { categoria:'lider', volumenBase: 48000, precioActual: 2350, costoUnitario: 1550, elasticidad: -0.9, variacionPrecio: 5 };
+let rgmElastResult = null;
+let rgmManualForm = null;
+const chartRegistry = {};
+
+/* ---------- deterministic pseudo-random helpers (so filters feel "alive") ---------- */
+function hash(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h<<5)-h+str.charCodeAt(i); h|=0; } return h; }
+function rand01(seed){ const x = Math.sin(seed*99.71)*10000; return x - Math.floor(x); }
+function vary(base, seedStr, spreadPct){ const r = rand01(hash(seedStr)); return base * (1 + (r-0.5)*2*spreadPct); }
+function money(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
+function moneyK(n){ if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(1)+'M'; if(Math.abs(n)>=1e3) return '$'+(n/1e3).toFixed(0)+'K'; return '$'+Math.round(n); }
+function num(n,d=0){ return n.toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:d}); }
+function pctStr(n,d=1){ return (n>=0?'+':'') + n.toFixed(d) + '%'; }
+function deltaClass(n){ return n>0.15?'up':(n<-0.15?'down':'flat'); }
+function fseed(){ return filters.periodo+filters.canal+filters.region; }
+
+/* ============================= RENDER: SIDEBAR ============================= */
+function renderNav(){
+  const nav = document.getElementById('nav');
+  nav.innerHTML = VERTICALS.map(v => `
+    <div class="nav-item ${current===v.id?'active':''}" onclick="setView('${v.id}')">
+      <span class="dot" style="background:${v.color}"></span>${v.label}
+    </div>
+  `).join('');
+}
+function setView(id){
+  current = id;
+  renderNav();
+  const v = VERTICALS.find(x=>x.id===id);
+  document.getElementById('viewTitle').textContent = v.label;
+  document.getElementById('viewDesc').textContent = v.desc;
+  renderContent();
+}
+
+/* ============================= SHARED: FILTER BAR ============================= */
+function filterBarHtml(opts){
+  opts = opts || {};
+  return `
+  <div class="filterbar">
+    <div class="fgroup"><label>Período</label>
+      <select onchange="filters.periodo=this.value;renderContent()">
+        ${PERIODOS.map(p=>`<option ${p===filters.periodo?'selected':''}>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fgroup"><label>Canal</label>
+      <select onchange="filters.canal=this.value;renderContent()">
+        ${CANALES.map(p=>`<option ${p===filters.canal?'selected':''}>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fgroup"><label>Región</label>
+      <select onchange="filters.region=this.value;renderContent()">
+        ${REGIONES.map(p=>`<option ${p===filters.region?'selected':''}>${p}</option>`).join('')}
+      </select>
+    </div>
+  </div>`;
+}
+
+function kpiCard(label, value, deltaVal, deltaLabel){
+  const cls = deltaClass(deltaVal);
+  const arrow = cls==='up'?'▲':(cls==='down'?'▼':'—');
+  return `<div class="kpi-card">
+    <div class="label">${label}</div>
+    <div class="value">${value}</div>
+    <div class="delta ${cls}">${arrow} ${deltaLabel}</div>
+  </div>`;
+}
+function kpiCardClean(label, value, deltaVal){
+  const cls = deltaClass(deltaVal);
+  const arrow = cls==='up'?'▲':(cls==='down'?'▼':'—');
+  return `<div class="kpi-card">
+    <div class="label">${label}</div>
+    <div class="value">${value}</div>
+    <div class="delta ${cls}">${arrow} ${pctStr(deltaVal)}</div>
+  </div>`;
+}
+function periodYoYLabel(periodo){ return periodo.replace('2026','2025'); }
+function ventasFseed(){ return fseed()+filters.cliente+filters.categoria+filters.segmento+filters.producto+filters.um+filters.vendedor; }
+function ventasFilterBarHtml(){
+  const sel = (label,val,opts,field) => `
+    <div class="fgroup"><label>${label}</label>
+      <select onchange="filters.${field}=this.value;renderContent()">
+        ${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`;
+  return `<div class="filterbar">
+    ${sel('Período', filters.periodo, PERIODOS, 'periodo')}
+    ${sel('Unidad de medida', filters.um, UNIDADES, 'um')}
+    ${sel('Canal', filters.canal, CANALES, 'canal')}
+    ${sel('Región', filters.region, REGIONES, 'region')}
+    ${sel('Cliente', filters.cliente, CLIENTES, 'cliente')}
+    ${sel('Categoría', filters.categoria, CATEGORIAS, 'categoria')}
+    ${sel('Segmento', filters.segmento, SEGMENTOS, 'segmento')}
+    ${sel('Producto', filters.producto, PRODUCTOS, 'producto')}
+    ${sel('Vendedor', filters.vendedor, VENDEDORES, 'vendedor')}
+  </div>`;
+}
+
+function sectionTitle(t, tag){
+  return `<div class="section-title">${t} ${tag?`<span class="tag">${tag}</span>`:''}</div>`;
+}
+
+if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){ Chart.register(ChartDataLabels); }
+function destroyChart(id){ if(chartRegistry[id]){ chartRegistry[id].destroy(); delete chartRegistry[id]; } }
+function lineChart(id, labels, datasets, opts){
+  if(typeof Chart === 'undefined') return;
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  opts = opts || {};
+  chartRegistry[id] = new Chart(ctx, {
+    type: opts.type || 'line',
+    data: { labels, datasets },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: opts.labelFormatter ? 20 : 6 } },
+      plugins:{
+        legend:{ display: datasets.length>1, labels:{color:'#8d8d9a', boxWidth:10, font:{size:10.5}}},
+        datalabels: opts.labelFormatter ? {
+          display:true, color:'#e5e5ea', anchor:'end', align:'top', offset:4,
+          font:{size:10, weight:'600'}, formatter: opts.labelFormatter
+        } : { display:false }
+      },
+      scales:{
+        x:{ ticks:{color:'#5f5f6d', font:{size:10.5}}, grid:{color:'#1c1c26'}},
+        y:{ ticks:{display: !opts.hideYAxis, color:'#5f5f6d', font:{size:10.5}}, grid:{color:'#1c1c26'}}
+      }
+    }
+  });
+}
+function barChart(id, labels, datasets, labelFormatter){
+  lineChart(id, labels, datasets, {type:'bar', labelFormatter});
+}
+function doughnutChart(id, labels, data, colors){
+  if(typeof Chart === 'undefined') return;
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  chartRegistry[id] = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data, backgroundColor: colors, borderColor: '#16161f', borderWidth:2 }]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{ legend:{ position:'right', labels:{color:'#8d8d9a', boxWidth:9, font:{size:10.5}}}, datalabels:{display:false} }}
+  });
+}
+
+/* ============================= MAIN DISPATCH ============================= */
+function renderContent(){
+  const c = document.getElementById('content');
+  if(current==='ventas') c.innerHTML = viewVentas();
+  else if(current==='sellthrough') c.innerHTML = viewSellThrough();
+  else if(current==='finanzas') c.innerHTML = viewFinanzas();
+  else if(current==='rgm') c.innerHTML = viewRGM();
+  // charts must be created after innerHTML is in DOM
+  requestAnimationFrame(()=>{
+    if(current==='ventas') chartsVentas();
+    else if(current==='sellthrough') chartsSellThrough();
+    else if(current==='finanzas') chartsFinanzas();
+    else if(current==='rgm') chartsRGM();
+  });
+}
+
+/* ============================================================
+   VERTICAL 1 — VENTAS
+   ============================================================ */
+function monthDeltaStripHtml(deltas, caption){
+  return `
+    <div class="panel-sub" style="margin-top:12px;margin-bottom:-2px">${caption}</div>
+    <div class="month-delta-strip">
+      ${MESES.map((m,i)=>`<div class="mds-item"><span class="mds-m">${m}</span><span class="mds-v ${deltas[i]>=0?'up':'down'}">${pctStr(deltas[i])}</span></div>`).join('')}
+    </div>`;
+}
+function monthValueStripHtml(values, caption, formatter){
+  return `
+    <div class="panel-sub" style="margin-top:12px;margin-bottom:-2px">${caption}</div>
+    <div class="month-delta-strip">
+      ${MESES.map((m,i)=>`<div class="mds-item"><span class="mds-m">${m}</span><span class="mds-v">${formatter(values[i])}</span></div>`).join('')}
+    </div>`;
+}
+function periodoMesLabel(){
+  if(filters.periodo === 'Presupuesto') return 'vs. Presupuesto';
+  return filters.periodo.indexOf('(MTD)') !== -1 ? 'mes en curso (MTD)' : 'mes';
+}
+const WINDOWS = ['UM','U3M','U6M','U12M','Total'];
+const FLOW_FACTOR  = {UM:1, U3M:2.9, U6M:5.7, U12M:11.0, Total:12.6};
+const COUNT_FACTOR = {UM:1, U3M:2.2, U6M:3.4, U12M:5.1, Total:5.8};
+function windowDimMeta(){
+  const map = {
+    producto:  {label:'Producto', items: PRODUCTOS.slice(1)},
+    categoria: {label:'Categoría', items: CATEGORIAS.slice(1)},
+    segmento:  {label:'Segmento', items: SEGMENTOS.slice(1)},
+  };
+  return map[windowDim];
+}
+function windowSummaryTable(){
+  const meta = windowDimMeta();
+  const items = meta.items;
+  const s = ventasFseed();
+  const um = UM_META[filters.um];
+  const data = WINDOWS.map(w=> items.map(it=>{
+    const seed = s+w+it;
+    const vol = vary(180000/items.length*2.2, seed+'vol', .3) * FLOW_FACTOR[w] * um.volFactor;
+    const cli = Math.round(vary(280/items.length*2.2, seed+'cli', .3) * COUNT_FACTOR[w]);
+    return { vol, cli };
+  }));
+  return { meta, items, data };
+}
+const CHAT_SUGGESTIONS_VENTAS = [
+  '¿Cómo estamos vs presupuesto del período?',
+  '¿Dónde está el mayor problema: volumen, precio o mix?',
+  '¿Qué cliente explica la variación de venta neta?',
+  '¿Por qué cayó el mix este mes?',
+];
+function askNexusVentas(q){
+  q = (q||'').trim();
+  if(!q) return;
+  chatMessages.push({role:'user', text:q});
+  chatMessages.push({role:'ai', html: generateNexusResponseVentas(q)});
+  renderContent();
+}
+function generateNexusResponseVentas(q){
+  const d = ventasSeries();
+  const k = d.k;
+  const ql = q.toLowerCase();
+  let diagnostico, insight, iniciativas;
+
+  if(ql.includes('presupuesto')){
+    diagnostico = `Volumen cerró el ${periodoMesLabel()} en ${d.volCumplimientoMes.toFixed(0)}% de cumplimiento vs. presupuesto, y ${d.volCumplimientoAcum.toFixed(0)}% en el acumulado. Venta Neta muestra ${d.ventaCumplimientoMes.toFixed(0)}% y ${d.ventaCumplimientoAcum.toFixed(0)}% respectivamente.`;
+    insight = d.ventaCumplimientoMes>=100 ? 'El período está sobre-cumpliendo en valor, principalmente por precio — hay riesgo de que el crecimiento no sea sostenible si el volumen no acompaña.' : 'El desvío contra presupuesto está más explicado por volumen que por precio, lo que sugiere un problema de cobertura o quiebre, no de pricing.';
+    iniciativas = ['Redirigir foco comercial a los clientes con mayor brecha vs. objetivo (ver Ranking).', 'Revisar el presupuesto de la categoría con menor Mix Alcance antes del cierre de mes.', 'Escalar a Trade Marketing el listado de PDV con distribución por debajo del objetivo.'];
+  } else if(ql.includes('problema') || (ql.includes('volumen') && ql.includes('precio'))){
+    const drivers = [
+      {n:'Volumen', v: k.dVol},
+      {n:'Precio', v: k.dPrecio},
+      {n:'Mix', v: k.dMix},
+    ].sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+    diagnostico = `El mayor movimiento del período está en ${drivers[0].n} (${pctStr(drivers[0].v)}), seguido por ${drivers[1].n} (${pctStr(drivers[1].v)}).`;
+    insight = `La variación de Venta Neta está explicada principalmente por ${drivers[0].n.toLowerCase()}, no por los otros dos factores — conviene accionar ahí primero.`;
+    iniciativas = [`Priorizar un plan de ${drivers[0].n.toLowerCase()} para el próximo período.`, 'Aislar el efecto por canal/región en el Ranking para confirmar dónde se concentra.', 'Fijar un umbral de alerta para este driver de cara al próximo cierre.'];
+  } else if(ql.includes('cliente')){
+    const rows = rankingRows();
+    const top = rows[0];
+    diagnostico = `${top.it} es el mayor contribuyente de Venta Neta con los filtros actuales (${moneyK(top.vn)}), seguido por ${rows[1] ? rows[1].it : 'el resto de la cartera'}.`;
+    insight = 'La concentración en pocos clientes implica riesgo de dependencia — conviene monitorear el Top 3 con foco especial en el Ranking.';
+    iniciativas = [`Agendar revisión comercial con ${top.it} antes del cierre de período.`, 'Diversificar la base de clientes compradores en el canal con menor cobertura.', 'Activar alerta si el Top 1 cae más de 10% vs. mes anterior.'];
+  } else if(ql.includes('mix')){
+    const worst = [...d.mixBrands].sort((a,b)=>a.alcance-b.alcance)[0];
+    diagnostico = `${worst.n} es la marca/producto con menor alcance de mix (${worst.alcance.toFixed(0)}%), arrastrando el alcance ponderado a ${d.mixAlcance.toFixed(0)}%.`;
+    insight = 'El mix ponderado está siendo penalizado por un producto de bajo peso relativo — el resto del portafolio está en línea con el objetivo.';
+    iniciativas = [`Reforzar disponibilidad y exhibición de ${worst.n} en el canal principal.`, 'Evaluar si el objetivo de volumen de esa marca es realista para el período.', 'Redirigir presupuesto promocional hacia esa marca si el fill rate lo permite.'];
+  } else {
+    diagnostico = `Sobre "${q}": con los filtros actuales, Venta Neta está en ${moneyK(k.ventaNeta)} (${pctStr(k.dVenta)}) y Volumen en ${k.volumenFmt} (${pctStr(k.dVol)}).`;
+    insight = 'No tengo un caso de uso específico armado para esta pregunta en el mockup — en producción, Nexus AI cruzaría esto con ERP, distribuidores y mercado para responder con precisión.';
+    iniciativas = ['Afinar la pregunta con un cliente, canal o producto puntual.', 'Revisar el Ranking y el Resumen por ventana de tiempo para más detalle.', 'Sumar esta pregunta al set de casos de uso a entrenar.'];
+  }
+
+  return `
+    <div class="nexus-block"><span class="nb-tag">📊 Diagnóstico</span><p>${diagnostico}</p></div>
+    <div class="nexus-block"><span class="nb-tag">💡 Insight</span><p>${insight}</p></div>
+    <div class="nexus-block"><span class="nb-tag">🚀 Iniciativas</span><ul>${iniciativas.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+  `;
+}
+function renderChatMessage(m){
+  if(m.role==='user') return `<div class="chat-msg chat-user">${m.text}</div>`;
+  return `<div class="chat-msg chat-ai">${m.html}</div>`;
+}
+function nexusChatPanelHtml(){
+  return `
+  <div class="panel" style="margin-bottom:20px;border-color:rgba(139,92,246,.35)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b3bd6);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0">✨</div>
+      <h3 style="margin:0">Preguntale a Nexus AI</h3>
+    </div>
+    <div class="panel-sub" style="margin-bottom:14px">Preguntá en lenguaje natural sobre Ventas. Nexus AI no solo diagnostica: te dice qué hacer.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      ${CHAT_SUGGESTIONS_VENTAS.map((q,i)=>`<div class="chip" onclick="askNexusVentas(CHAT_SUGGESTIONS_VENTAS[${i}])">${q}</div>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <input id="nexusChatInput" type="text" placeholder="Preguntá en lenguaje natural..." onkeydown="if(event.key==='Enter'){askNexusVentas(this.value);this.value='';}">
+      <button class="btn" onclick="const el=document.getElementById('nexusChatInput');askNexusVentas(el.value);el.value='';">Preguntar →</button>
+    </div>
+    ${chatMessages.length ? `<div class="chat-thread">${chatMessages.map(renderChatMessage).join('')}</div>` : ''}
+  </div>`;
+}
+function ventasKpis(){
+  const s = ventasFseed();
+  const um = UM_META[filters.um];
+  const volKg = vary(842000, s+'vol', .18);
+  const precioKg = vary(2350, s+'pp', .08);
+  return {
+    volumen: volKg,
+    volumenFmt: num(volKg*um.volFactor, um.dec)+' '+um.suf,
+    ventaNeta: vary(1980000000, s+'vn', .18),
+    mix: vary(38, s+'mix', .1),
+    precioProm: precioKg,
+    precioPromFmt: money(precioKg*um.priceFactor)+'/'+um.suf,
+    clientes: Math.round(vary(1240, s+'cli', .12)),
+    diasPago: vary(34, s+'dp', .15),
+    deudaVencida: vary(52000000, s+'dv', .3),
+    dVol: vary(3.4, s+'dvol', .4),
+    dVenta: vary(5.1, s+'dvn', .4),
+    dMix: vary(-1.2, s+'dmix', .6),
+    dPrecio: vary(6.8, s+'dpp', .3),
+    dClientes: vary(2.0, s+'dcli', .5),
+    dDiasPago: vary(-4.5, s+'ddp', .4),
+    dDeuda: vary(12.3, s+'ddv', .5),
+  };
+}
+function ventasSeries(){
+  const s = ventasFseed();
+  const k = ventasKpis();
+  const um = UM_META[filters.um];
+  const volSeries = monthlySeries(k.volumen, s+'vols', .03, .07);
+  const vnSeries = monthlySeries(k.ventaNeta, s+'vns', .03, .07);
+  const mixBrands = [
+    {n:'Marca/Producto A', peso:46},
+    {n:'Marca/Producto B', peso:33},
+    {n:'Marca/Producto C', peso:21},
+  ];
+  mixBrands.forEach(b=>{
+    b.alcance = vary(97, s+'mixb'+b.n, .12);
+    b.volObj = Math.round(vary(180000, s+'vo'+b.n, .2) * b.peso/100 * um.volFactor);
+    b.volReal = Math.round(b.volObj * b.alcance/100);
+  });
+  const mixAlcance = mixBrands.reduce((a,b)=>a+b.peso*b.alcance,0)/100;
+  const mixAlcanceAcum = vary(mixAlcance, s+'mixalcacum', .05);
+  const precioCumplMes = vary(101, s+'ppcumplmes', .06);
+  const precioCumplAcum = vary(100, s+'ppcumplacum', .04);
+  const mixSeries = MESES.map((m,i)=> vary(mixAlcance*(0.97+i*0.005), s+'mixm'+m, .05));
+  const precioSeries = monthlySeries(k.precioProm, s+'pps', .012, .04);
+  const precioMoM = (precioSeries[6]/precioSeries[5]-1)*100;
+  const precioYoY = vary(6.8, s+'ppyoy', .3);
+  const clientesSeries = MESES.map((m,i)=> Math.round(vary(k.clientes*(1+(i-6)*0.015), s+'clim'+m, .1)));
+  const clientesMoM = (clientesSeries[6]/clientesSeries[5]-1)*100;
+  const clientesYoY = vary(2.0, s+'cliyoy', .5);
+  const volCumplimientoMes = vary(97, s+'volcumpmes', .08);
+  const volCumplimientoAcum = vary(99, s+'volcumpacum', .05);
+  const ventaCumplimientoMes = vary(101, s+'vncumpmes', .08);
+  const ventaCumplimientoAcum = vary(100, s+'vncumpacum', .05);
+  const compBasis = filters.periodo==='Presupuesto' ? 'presupuesto de cada mes' : 'mismo mes, año anterior';
+  const volDeltas      = MESES.map((m)=> vary(k.dVol,      s+'voldelta'+m, .6));
+  const vnDeltas        = MESES.map((m)=> vary(k.dVenta,    s+'vndelta'+m, .6));
+  const precioDeltas    = MESES.map((m)=> vary(precioYoY,   s+'ppdelta'+m, .5));
+  const clientesDeltas  = MESES.map((m)=> vary(clientesYoY, s+'clidelta'+m, .5));
+  return { k, um, volSeries, vnSeries, mixBrands, mixAlcance, mixAlcanceAcum, mixSeries, precioSeries, precioMoM, precioYoY, precioCumplMes, precioCumplAcum, clientesSeries, clientesMoM, clientesYoY, volCumplimientoMes, volCumplimientoAcum, ventaCumplimientoMes, ventaCumplimientoAcum, compBasis, volDeltas, vnDeltas, precioDeltas, clientesDeltas };
+}
+function rankingDimMeta(){
+  const map = {
+    canal:     {label:'Canal', items: CANALES.slice(1)},
+    region:    {label:'Región', items: REGIONES.slice(1)},
+    cliente:   {label:'Cliente', items: CLIENTES.slice(1)},
+    categoria: {label:'Categoría', items: CATEGORIAS.slice(1)},
+    producto:  {label:'Producto', items: PRODUCTOS.slice(1)},
+    vendedor:  {label:'Vendedor', items: VENDEDORES.slice(1)},
+  };
+  return map[rankingDim];
+}
+function rankingRows(){
+  const meta = rankingDimMeta();
+  const s = ventasFseed();
+  const um = UM_META[filters.um];
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const volKg = vary(180000, seed+'v', .35)/(i*0.6+1);
+    const vn = vary(430000000, seed+'vn', .35)/(i*0.6+1);
+    const nprod = Math.max(1, Math.round(vary(9, seed+'np', .4)));
+    return { it, vol: volKg*um.volFactor, vn, nprod, precioNeto: (vn/volKg)*um.priceFactor };
+  }).sort((a,b)=>b.vol-a.vol);
+}
+function agingDimMeta(){
+  const map = {
+    cliente: {label:'Cliente', items: CLIENTES.slice(1)},
+    canal:   {label:'Canal', items: CANALES.slice(1)},
+    region:  {label:'Región', items: REGIONES.slice(1)},
+  };
+  return map[agingDim];
+}
+function agingRows(baseTotal, seedTag){
+  const meta = agingDimMeta();
+  const s = ventasFseed();
+  return meta.items.map((it,i)=>{
+    const seed = s+seedTag+it;
+    const total = vary(baseTotal, seed+'tot', .4)/(i*0.6+1);
+    const b30 = total*vary(0.5, seed+'b30', .25);
+    const b60 = total*vary(0.3, seed+'b60', .3);
+    const b90 = Math.max(0, total-b30-b60);
+    return { it, total, b30, b60, b90 };
+  }).sort((a,b)=>b.total-a.total);
+}
+function viewVentas(){
+  const d = ventasSeries();
+  const k = d.k, um = d.um;
+  const rows = rankingRows();
+  const yoyLabel = periodYoYLabel(filters.periodo);
+  const dimMeta = rankingDimMeta();
+  const wt = windowSummaryTable();
+  const agMeta = agingDimMeta();
+  const dpRows = agingRows(k.ventaNeta*0.14, 'dp');
+  const dvRows = agingRows(k.deudaVencida, 'dv');
+
+  return `
+    ${ventasFilterBarHtml()}
+    ${nexusChatPanelHtml()}
+    ${sectionTitle('KPIs principales','ERP · fuente propia')}
+    <div class="kpi-grid">
+      ${kpiCardClean('Volumen', k.volumenFmt, k.dVol)}
+      ${kpiCardClean('Venta Neta', moneyK(k.ventaNeta), k.dVenta)}
+      ${kpiCardClean('Mix', k.mix.toFixed(1)+'%', k.dMix)}
+      ${kpiCardClean('Precio Promedio', k.precioPromFmt, k.dPrecio)}
+      ${kpiCardClean('Clientes Compradores', num(k.clientes), k.dClientes)}
+      ${kpiCardClean('Días de Pago (DSO)', k.diasPago.toFixed(0)+' días', k.dDiasPago)}
+      ${kpiCardClean('Deuda Vencida', moneyK(k.deudaVencida), k.dDeuda)}
+    </div>
+
+    ${sectionTitle('Evolución')}
+    <div class="grid-2">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Volumen mensual</h3><div class="panel-sub">Nominal por mes (${um.suf})</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.volCumplimientoMes>=100?'green':'orange'}">${d.volCumplimientoMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.volCumplimientoAcum>=100?'green':'orange'}">${d.volCumplimientoAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-ventas-vol"></canvas></div>
+        ${monthDeltaStripHtml(d.volDeltas, 'Variación vs período filtrado')}
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Venta Neta mensual</h3><div class="panel-sub">Nominal por mes ($)</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.ventaCumplimientoMes>=100?'green':'orange'}">${d.ventaCumplimientoMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.ventaCumplimientoAcum>=100?'green':'orange'}">${d.ventaCumplimientoAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-ventas-vn"></canvas></div>
+        ${monthDeltaStripHtml(d.vnDeltas, 'Variación vs período filtrado')}
+      </div>
+    </div>
+
+    <div class="grid-2-stretch">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Mix</h3><div class="panel-sub">% de alcance vs. objetivo, ponderado por marca/producto</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.mixAlcance>=100?'green':'orange'}">${d.mixAlcance.toFixed(0)}% alcance ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.mixAlcanceAcum>=100?'green':'orange'}">${d.mixAlcanceAcum.toFixed(0)}% alcance acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-ventas-mix"></canvas></div>
+        <table style="margin-top:12px">
+          <thead><tr><th>Marca/Producto</th><th>Peso</th><th>Vol. Objetivo (${um.suf})</th><th>Vol. Real (${um.suf})</th><th>Alcance</th></tr></thead>
+          <tbody>${d.mixBrands.map(b=>`<tr><td>${b.n}</td><td>${b.peso}%</td><td>${num(b.volObj,0)}</td><td>${num(b.volReal,0)}</td><td>${b.alcance.toFixed(0)}%</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Precio Promedio mensual</h3><div class="panel-sub">$/${um.suf}</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.precioCumplMes>=100?'green':'orange'}">${d.precioCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.precioCumplAcum>=100?'green':'orange'}">${d.precioCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-ventas-precio"></canvas></div>
+        ${monthDeltaStripHtml(d.precioDeltas, 'Variación vs período filtrado')}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Clientes Compradores mensual</h3><div class="panel-sub">Cantidad de clientes con compra en el mes, según filtros</div></div>
+        <div style="display:flex;gap:6px">
+          <span class="pill pill-badge ${d.clientesMoM>=0?'green':'red'}">Mes ant. ${pctStr(d.clientesMoM)}</span>
+          <span class="pill pill-badge ${d.clientesYoY>=0?'green':'red'}">vs ${yoyLabel} ${pctStr(d.clientesYoY)}</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="ch-ventas-clientes"></canvas></div>
+      ${monthDeltaStripHtml(d.clientesDeltas, 'Variación vs período filtrado')}
+    </div>
+
+    ${sectionTitle('Resumen por ventana de tiempo')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Desglosar por</label>
+          <select onchange="windowDim=this.value;renderContent()">
+            <option value="producto" ${windowDim==='producto'?'selected':''}>Producto</option>
+            <option value="categoria" ${windowDim==='categoria'?'selected':''}>Categoría</option>
+            <option value="segmento" ${windowDim==='segmento'?'selected':''}>Segmento</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th rowspan="2">Ventana</th>${wt.items.map(it=>`<th colspan="2" style="text-align:center">${it}</th>`).join('')}</tr>
+          <tr>${wt.items.map(()=>`<th>Volumen (${um.suf})</th><th>Clientes</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${WINDOWS.map((w,wi)=>`<tr><td>${w}</td>${wt.data[wi].map(cell=>`<td>${num(cell.vol,um.dec)}</td><td>${num(cell.cli,0)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="foot-note">UM = último mes · U3M/U6M/U12M = últimos 3/6/12 meses · Total = histórico acumulado disponible.</div>
+    </div>
+
+    ${sectionTitle('Ranking')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver ranking por</label>
+          <select onchange="rankingDim=this.value;renderContent()">
+            <option value="cliente" ${rankingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${rankingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${rankingDim==='region'?'selected':''}>Región</option>
+            <option value="categoria" ${rankingDim==='categoria'?'selected':''}>Categoría</option>
+            <option value="producto" ${rankingDim==='producto'?'selected':''}>Producto</option>
+            <option value="vendedor" ${rankingDim==='vendedor'?'selected':''}>Vendedor</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>${dimMeta.label}</th><th>Volumen (${um.suf})</th><th>Venta Neta</th><th># Productos Comprados</th><th>Precio Neto</th></tr></thead>
+        <tbody>
+        ${rows.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${num(r.vol, um.dec)}</td>
+          <td>${moneyK(r.vn)}</td>
+          <td>${r.nprod}</td>
+          <td>${money(r.precioNeto)}/${um.suf}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${sectionTitle('Días de Pago y Deuda Vencida')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver por</label>
+          <select onchange="agingDim=this.value;renderContent()">
+            <option value="cliente" ${agingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${agingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${agingDim==='region'?'selected':''}>Región</option>
+          </select>
+        </div>
+      </div>
+      <h3>Facturas pendientes de cobro</h3>
+      <div class="panel-sub">Importe en venta neta abierto, por antigüedad</div>
+      <table>
+        <thead><tr><th>${agMeta.label}</th><th>Importe Total Pendiente</th><th>0-30 días</th><th>31-60 días</th><th>61-90 días</th></tr></thead>
+        <tbody>
+        ${dpRows.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${moneyK(r.total)}</td>
+          <td>${moneyK(r.b30)}</td>
+          <td>${moneyK(r.b60)}</td>
+          <td>${moneyK(r.b90)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:22px">Deuda vencida</h3>
+      <div class="panel-sub">Importe vencido (fuera de término), por antigüedad</div>
+      <table>
+        <thead><tr><th>${agMeta.label}</th><th>Importe Total Vencido</th><th>0-30 días</th><th>31-60 días</th><th>61-90 días</th></tr></thead>
+        <tbody>
+        ${dvRows.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${r.total>15000000?`<span class="pill red">${moneyK(r.total)}</span>`:moneyK(r.total)}</td>
+          <td>${moneyK(r.b30)}</td>
+          <td>${moneyK(r.b60)}</td>
+          <td>${moneyK(r.b90)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function chartsVentas(){
+  const d = ventasSeries();
+  const volDisplay = d.volSeries.map(v=>v*d.um.volFactor);
+  const precioDisplay = d.precioSeries.map(v=>v*d.um.priceFactor);
+  barChart('ch-ventas-vol', MESES, [{label:'Volumen ('+d.um.suf+')', data:volDisplay, backgroundColor:'#8b5cf6'}], v=>num(v, d.um.dec));
+  barChart('ch-ventas-vn', MESES, [{label:'Venta Neta', data:d.vnSeries, backgroundColor:'#3b82f6'}], v=>moneyK(v));
+  lineChart('ch-ventas-mix', MESES, [{label:'Alcance de Mix', data:d.mixSeries, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.12)', fill:true, tension:.35, pointRadius:3}], {labelFormatter: v=>v.toFixed(0)+'%'});
+  lineChart('ch-ventas-precio', MESES, [{label:'Precio Promedio', data:precioDisplay, borderColor:'#eab308', backgroundColor:'rgba(234,179,8,.12)', fill:true, tension:.35, pointRadius:3}], {labelFormatter: v=>money(v)});
+  barChart('ch-ventas-clientes', MESES, [{label:'Clientes Compradores', data:d.clientesSeries, backgroundColor:'#ec4899'}], v=>num(v,0));
+}
+
+/* ============================================================
+   VERTICAL 2 — SELL-THROUGH
+   ============================================================ */
+function sellThroughTabsHtml(){
+  const tabs = [['sellout','Sell-Out'],['sellin','Sell-In'],['mercado','Mercado'],['contexto','Contexto'],['mapa','Mapa de Clientes']];
+  return `<div class="subtabs">
+    ${tabs.map(([id,label])=>`<div class="subtab ${sellthroughTab===id?'active':''}" onclick="sellthroughTab='${id}';renderContent()">${label}</div>`).join('')}
+  </div>`;
+}
+function stFilterBarHtml(){
+  const sel = (label,val,opts,field) => `
+    <div class="fgroup"><label>${label}</label>
+      <select onchange="filters.${field}=this.value;renderContent()">
+        ${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`;
+  return `<div class="filterbar">
+    ${sel('Período', filters.periodo, PERIODOS, 'periodo')}
+    ${sel('Unidad de medida', filters.um, UNIDADES, 'um')}
+    ${sel('Canal', filters.canal, CANALES, 'canal')}
+    ${sel('Región', filters.region, REGIONES, 'region')}
+    ${sel('Cliente', filters.cliente, CLIENTES, 'cliente')}
+    ${sel('Categoría', filters.categoria, CATEGORIAS, 'categoria')}
+    ${sel('Segmento', filters.segmento, SEGMENTOS, 'segmento')}
+    ${sel('Producto', filters.producto, PRODUCTOS, 'producto')}
+    ${sel('Vendedor', filters.vendedor, VENDEDORES, 'vendedor')}
+    ${sel('Distribuidor', filters.distribuidor, DISTRIBUIDORES, 'distribuidor')}
+  </div>`;
+}
+function viewSellThrough(){
+  let body = '';
+  if(sellthroughTab==='sellout') body = stSellOut();
+  else if(sellthroughTab==='sellin') body = stSellIn();
+  else if(sellthroughTab==='mercado') body = stMercado();
+  else if(sellthroughTab==='contexto') body = stContexto();
+  else if(sellthroughTab==='mapa') body = stMapa();
+  return stFilterBarHtml() + sellThroughTabsHtml() + body;
+}
+
+/* ---------- combinadores Sell-In (SI) + Sell-Out (SO) ---------- */
+function rankingRowsSellOut(){
+  const meta = rankingDimMeta();
+  const s = ventasFseed()+'so';
+  const um = UM_META[filters.um];
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const volKg = vary(150000, seed+'v', .35)/(i*0.6+1);
+    const vn = vary(360000000, seed+'vn', .35)/(i*0.6+1);
+    const nprod = Math.max(1, Math.round(vary(8, seed+'np', .4)));
+    return { it, vol: volKg*um.volFactor, vn, nprod, precioNeto: (vn/volKg)*um.priceFactor };
+  });
+}
+function rankingRowsCombined(){
+  const si = rankingRows();
+  const so = rankingRowsSellOut();
+  const soMap = {}; so.forEach(r=>soMap[r.it]=r);
+  return si.map(r=>({
+    it:r.it, volSI:r.vol, volSO: soMap[r.it]?soMap[r.it].vol:0,
+    vnSI:r.vn, vnSO: soMap[r.it]?soMap[r.it].vn:0,
+    nprodSI:r.nprod, nprodSO: soMap[r.it]?soMap[r.it].nprod:0,
+    precioSI:r.precioNeto, precioSO: soMap[r.it]?soMap[r.it].precioNeto:0,
+  }));
+}
+function windowSummaryTableST(){
+  const wtSI = windowSummaryTable();
+  const items = wtSI.items;
+  const um = UM_META[filters.um];
+  const sSO = ventasFseed()+'so';
+  const dataSO = WINDOWS.map(w=> items.map(it=>{
+    const seed = sSO+w+it;
+    const vol = vary(150000/items.length*2.2, seed+'vol', .3) * FLOW_FACTOR[w] * um.volFactor;
+    const cli = Math.round(vary(420/items.length*2.2, seed+'cli', .3) * COUNT_FACTOR[w]);
+    return { vol, cli };
+  }));
+  return { meta: wtSI.meta, items, dataSI: wtSI.data, dataSO };
+}
+function sellOutSeries(){
+  const s = ventasFseed()+'so';
+  const um = UM_META[filters.um];
+  const volKg = vary(690000, s+'vol', .2);
+  const ventaNeta = vary(1720000000, s+'vn', .2);
+  const mix = vary(41, s+'mix', .1);
+  const precioKg = vary(2495, s+'pp', .08);
+  const clientes = Math.round(vary(2860, s+'cli', .15));
+
+  const dVol = vary(2.1, s+'dvol', .4);
+  const dVenta = vary(4.0, s+'dvn', .4);
+  const dMix = vary(0.8, s+'dmix', .6);
+  const dPrecio = vary(5.2, s+'dpp', .3);
+  const dClientes = vary(3.3, s+'dcli', .5);
+
+  const vnSeries = monthlySeries(ventaNeta, s+'vns', .03, .07);
+  const mixSeries = MESES.map((m,i)=> vary(mix*(0.97+i*0.006), s+'mixm'+m, .06));
+  const precioSeries = monthlySeries(precioKg, s+'pps', .012, .04);
+
+  const ventaCumplimientoMes = vary(100, s+'vncumpmes', .08);
+  const ventaCumplimientoAcum = vary(99, s+'vncumpacum', .05);
+  const mixAlcance = vary(99, s+'mixalc', .08);
+  const mixAlcanceAcum = vary(mixAlcance, s+'mixalcacum', .05);
+  const precioCumplMes = vary(101, s+'ppcumplmes', .06);
+  const precioCumplAcum = vary(100, s+'ppcumplacum', .04);
+
+  const vnDeltas = MESES.map((m)=> vary(dVenta, s+'vndelta'+m, .6));
+  const mixDeltas = MESES.map((m)=> vary(dMix, s+'mixdelta'+m, .8));
+  const precioDeltas = MESES.map((m)=> vary(dPrecio, s+'ppdelta'+m, .5));
+
+  const passthrough = MESES.map((m)=> vary(74, s+'pt'+m, .12));
+  const soVnCumplMes = vary(98, s+'sovncmes', .08);
+  const soVnCumplAcum = vary(100, s+'sovncacum', .05);
+
+  return {
+    volKg, volumenFmt: num(volKg*um.volFactor,um.dec)+' '+um.suf, ventaNeta, mix, precioKg,
+    precioPromFmt: money(precioKg*um.priceFactor)+'/'+um.suf, clientes,
+    dVol, dVenta, dMix, dPrecio, dClientes,
+    vnSeries, mixSeries, precioSeries,
+    ventaCumplimientoMes, ventaCumplimientoAcum, mixAlcance, mixAlcanceAcum, precioCumplMes, precioCumplAcum,
+    vnDeltas, mixDeltas, precioDeltas, passthrough, soVnCumplMes, soVnCumplAcum, um,
+  };
+}
+
+function stSellOut(){
+  const so = sellOutSeries();
+  const um = so.um;
+  const wtST = windowSummaryTableST();
+  const rowsST = rankingRowsCombined();
+  const dimMeta = rankingDimMeta();
+
+  return `
+    ${sectionTitle('KPIs de Sell-Out','Cadenas / Distribuidores — mismos KPIs que Ventas')}
+    <div class="kpi-grid">
+      ${kpiCardClean('Volumen', so.volumenFmt, so.dVol)}
+      ${kpiCardClean('Venta Neta', moneyK(so.ventaNeta), so.dVenta)}
+      ${kpiCardClean('Mix', so.mix.toFixed(1)+'%', so.dMix)}
+      ${kpiCardClean('Precio Promedio', so.precioPromFmt, so.dPrecio)}
+      ${kpiCardClean('Clientes Compradores', num(so.clientes), so.dClientes)}
+    </div>
+
+    ${sectionTitle('Evolución sell-out vs sell-in')}
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Venta Neta — Sell-Out vs Sell-In</h3><div class="panel-sub">Brecha entre lo despachado (sell-in) y lo efectivamente vendido al consumidor (sell-out)</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill pill-badge ${so.soVnCumplMes>=100?'green':'orange'}">${so.soVnCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+          <span class="pill pill-badge ${so.soVnCumplAcum>=100?'green':'orange'}">${so.soVnCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="ch-st-solin"></canvas></div>
+      ${monthValueStripHtml(so.passthrough, '% Passthrough — cuánto del descuento sell-in llega al precio sell-out', v=>v.toFixed(0)+'%')}
+    </div>
+
+    ${sectionTitle('Evolución Sell-Out')}
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Venta Neta mensual</h3><div class="panel-sub">Sell-Out — nominal por mes ($)</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill pill-badge ${so.ventaCumplimientoMes>=100?'green':'orange'}">${so.ventaCumplimientoMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+          <span class="pill pill-badge ${so.ventaCumplimientoAcum>=100?'green':'orange'}">${so.ventaCumplimientoAcum.toFixed(0)}% cumpl. acumulado</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="ch-so-vn"></canvas></div>
+      ${monthDeltaStripHtml(so.vnDeltas, 'Variación vs período filtrado')}
+    </div>
+
+    <div class="grid-2-stretch">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Mix</h3><div class="panel-sub">Sell-Out — % de alcance vs. objetivo</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${so.mixAlcance>=100?'green':'orange'}">${so.mixAlcance.toFixed(0)}% alcance ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${so.mixAlcanceAcum>=100?'green':'orange'}">${so.mixAlcanceAcum.toFixed(0)}% alcance acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-so-mix"></canvas></div>
+        ${monthDeltaStripHtml(so.mixDeltas, 'Variación vs período filtrado')}
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Precio Promedio mensual</h3><div class="panel-sub">Sell-Out — $/${um.suf}</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${so.precioCumplMes>=100?'green':'orange'}">${so.precioCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${so.precioCumplAcum>=100?'green':'orange'}">${so.precioCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-so-precio"></canvas></div>
+        ${monthDeltaStripHtml(so.precioDeltas, 'Variación vs período filtrado')}
+      </div>
+    </div>
+
+    ${sectionTitle('Resumen por ventana de tiempo','Sell-In (SI) + Sell-Out (SO)')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Desglosar por</label>
+          <select onchange="windowDim=this.value;renderContent()">
+            <option value="producto" ${windowDim==='producto'?'selected':''}>Producto</option>
+            <option value="categoria" ${windowDim==='categoria'?'selected':''}>Categoría</option>
+            <option value="segmento" ${windowDim==='segmento'?'selected':''}>Segmento</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr><th rowspan="2">Ventana</th>${wtST.items.map(it=>`<th colspan="4" style="text-align:center">${it}</th>`).join('')}</tr>
+          <tr>${wtST.items.map(()=>`<th>Vol SI</th><th>Vol SO</th><th>Cli SI</th><th>Cli SO</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${WINDOWS.map((w,wi)=>`<tr><td>${w}</td>${wtST.items.map((it,ii)=>`<td>${num(wtST.dataSI[wi][ii].vol,um.dec)}</td><td>${num(wtST.dataSO[wi][ii].vol,um.dec)}</td><td>${num(wtST.dataSI[wi][ii].cli,0)}</td><td>${num(wtST.dataSO[wi][ii].cli,0)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="foot-note">SI = Sell-In (ERP) · SO = Sell-Out (cadena/distribuidor). UM = último mes · U3M/U6M/U12M = últimos 3/6/12 meses · Total = histórico acumulado disponible.</div>
+    </div>
+
+    ${sectionTitle('Ranking','Sell-In (SI) + Sell-Out (SO)')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver ranking por</label>
+          <select onchange="rankingDim=this.value;renderContent()">
+            <option value="cliente" ${rankingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${rankingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${rankingDim==='region'?'selected':''}>Región</option>
+            <option value="categoria" ${rankingDim==='categoria'?'selected':''}>Categoría</option>
+            <option value="producto" ${rankingDim==='producto'?'selected':''}>Producto</option>
+            <option value="vendedor" ${rankingDim==='vendedor'?'selected':''}>Vendedor</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr><th rowspan="2">${dimMeta.label}</th><th colspan="2" style="text-align:center">Volumen (${um.suf})</th><th colspan="2" style="text-align:center">Venta Neta</th><th colspan="2" style="text-align:center"># Productos</th><th colspan="2" style="text-align:center">Precio Neto</th></tr>
+          <tr><th>SI</th><th>SO</th><th>SI</th><th>SO</th><th>SI</th><th>SO</th><th>SI</th><th>SO</th></tr>
+        </thead>
+        <tbody>
+        ${rowsST.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${num(r.volSI,um.dec)}</td><td>${num(r.volSO,um.dec)}</td>
+          <td>${moneyK(r.vnSI)}</td><td>${moneyK(r.vnSO)}</td>
+          <td>${r.nprodSI}</td><td>${r.nprodSO}</td>
+          <td>${money(r.precioSI)}</td><td>${money(r.precioSO)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+function stSellIn(){
+  const d = ventasSeries();
+  const k = d.k, um = d.um;
+  const rows = rankingRows();
+  const yoyLabel = periodYoYLabel(filters.periodo);
+  const dimMeta = rankingDimMeta();
+  const wt = windowSummaryTable();
+  const agMeta = agingDimMeta();
+  const dpRows = agingRows(k.ventaNeta*0.14, 'dp');
+  const dvRows = agingRows(k.deudaVencida, 'dv');
+  return `
+    ${sectionTitle('KPIs de Sell-In','Idéntico al pilar Ventas — misma fuente ERP')}
+    <div class="kpi-grid">
+      ${kpiCardClean('Volumen', k.volumenFmt, k.dVol)}
+      ${kpiCardClean('Venta Neta', moneyK(k.ventaNeta), k.dVenta)}
+      ${kpiCardClean('Mix', k.mix.toFixed(1)+'%', k.dMix)}
+      ${kpiCardClean('Precio Promedio', k.precioPromFmt, k.dPrecio)}
+      ${kpiCardClean('Clientes Compradores', num(k.clientes), k.dClientes)}
+      ${kpiCardClean('Días de Pago (DSO)', k.diasPago.toFixed(0)+' días', k.dDiasPago)}
+      ${kpiCardClean('Deuda Vencida', moneyK(k.deudaVencida), k.dDeuda)}
+    </div>
+
+    ${sectionTitle('Evolución')}
+    <div class="grid-2">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Volumen mensual</h3><div class="panel-sub">Nominal por mes (${um.suf})</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.volCumplimientoMes>=100?'green':'orange'}">${d.volCumplimientoMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.volCumplimientoAcum>=100?'green':'orange'}">${d.volCumplimientoAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-si-vol"></canvas></div>
+        ${monthDeltaStripHtml(d.volDeltas, 'Variación vs período filtrado')}
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Venta Neta mensual</h3><div class="panel-sub">Nominal por mes ($)</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.ventaCumplimientoMes>=100?'green':'orange'}">${d.ventaCumplimientoMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.ventaCumplimientoAcum>=100?'green':'orange'}">${d.ventaCumplimientoAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-si-vn"></canvas></div>
+        ${monthDeltaStripHtml(d.vnDeltas, 'Variación vs período filtrado')}
+      </div>
+    </div>
+
+    <div class="grid-2-stretch">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Mix</h3><div class="panel-sub">% de alcance vs. objetivo, ponderado por marca/producto</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.mixAlcance>=100?'green':'orange'}">${d.mixAlcance.toFixed(0)}% alcance ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.mixAlcanceAcum>=100?'green':'orange'}">${d.mixAlcanceAcum.toFixed(0)}% alcance acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-si-mix"></canvas></div>
+        <table style="margin-top:12px">
+          <thead><tr><th>Marca/Producto</th><th>Peso</th><th>Vol. Objetivo (${um.suf})</th><th>Vol. Real (${um.suf})</th><th>Alcance</th></tr></thead>
+          <tbody>${d.mixBrands.map(b=>`<tr><td>${b.n}</td><td>${b.peso}%</td><td>${num(b.volObj,0)}</td><td>${num(b.volReal,0)}</td><td>${b.alcance.toFixed(0)}%</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><h3>Precio Promedio mensual</h3><div class="panel-sub">$/${um.suf}</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-badge ${d.precioCumplMes>=100?'green':'orange'}">${d.precioCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+            <span class="pill pill-badge ${d.precioCumplAcum>=100?'green':'orange'}">${d.precioCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="ch-si-precio"></canvas></div>
+        ${monthDeltaStripHtml(d.precioDeltas, 'Variación vs período filtrado')}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Clientes Compradores mensual</h3><div class="panel-sub">Cantidad de clientes con compra en el mes, según filtros</div></div>
+        <div style="display:flex;gap:6px">
+          <span class="pill pill-badge ${d.clientesMoM>=0?'green':'red'}">Mes ant. ${pctStr(d.clientesMoM)}</span>
+          <span class="pill pill-badge ${d.clientesYoY>=0?'green':'red'}">vs ${yoyLabel} ${pctStr(d.clientesYoY)}</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="ch-si-clientes"></canvas></div>
+      ${monthDeltaStripHtml(d.clientesDeltas, 'Variación vs período filtrado')}
+    </div>
+
+    ${sectionTitle('Resumen por ventana de tiempo')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Desglosar por</label>
+          <select onchange="windowDim=this.value;renderContent()">
+            <option value="producto" ${windowDim==='producto'?'selected':''}>Producto</option>
+            <option value="categoria" ${windowDim==='categoria'?'selected':''}>Categoría</option>
+            <option value="segmento" ${windowDim==='segmento'?'selected':''}>Segmento</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th rowspan="2">Ventana</th>${wt.items.map(it=>`<th colspan="2" style="text-align:center">${it}</th>`).join('')}</tr>
+          <tr>${wt.items.map(()=>`<th>Volumen (${um.suf})</th><th>Clientes</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${WINDOWS.map((w,wi)=>`<tr><td>${w}</td>${wt.data[wi].map(cell=>`<td>${num(cell.vol,um.dec)}</td><td>${num(cell.cli,0)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="foot-note">UM = último mes · U3M/U6M/U12M = últimos 3/6/12 meses · Total = histórico acumulado disponible.</div>
+    </div>
+
+    ${sectionTitle('Ranking')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver ranking por</label>
+          <select onchange="rankingDim=this.value;renderContent()">
+            <option value="cliente" ${rankingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${rankingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${rankingDim==='region'?'selected':''}>Región</option>
+            <option value="categoria" ${rankingDim==='categoria'?'selected':''}>Categoría</option>
+            <option value="producto" ${rankingDim==='producto'?'selected':''}>Producto</option>
+            <option value="vendedor" ${rankingDim==='vendedor'?'selected':''}>Vendedor</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>${dimMeta.label}</th><th>Volumen (${um.suf})</th><th>Venta Neta</th><th># Productos Comprados</th><th>Precio Neto</th></tr></thead>
+        <tbody>
+        ${rows.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${num(r.vol, um.dec)}</td>
+          <td>${moneyK(r.vn)}</td>
+          <td>${r.nprod}</td>
+          <td>${money(r.precioNeto)}/${um.suf}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${sectionTitle('Días de Pago y Deuda Vencida')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver por</label>
+          <select onchange="agingDim=this.value;renderContent()">
+            <option value="cliente" ${agingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${agingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${agingDim==='region'?'selected':''}>Región</option>
+          </select>
+        </div>
+      </div>
+      <h3>Facturas pendientes de cobro</h3>
+      <div class="panel-sub">Importe en venta neta abierto, por antigüedad</div>
+      <table>
+        <thead><tr><th>${agMeta.label}</th><th>Importe Total Pendiente</th><th>0-30 días</th><th>31-60 días</th><th>61-90 días</th></tr></thead>
+        <tbody>
+        ${dpRows.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${moneyK(r.total)}</td>
+          <td>${moneyK(r.b30)}</td>
+          <td>${moneyK(r.b60)}</td>
+          <td>${moneyK(r.b90)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:22px">Deuda vencida</h3>
+      <div class="panel-sub">Importe vencido (fuera de término), por antigüedad</div>
+      <table>
+        <thead><tr><th>${agMeta.label}</th><th>Importe Total Vencido</th><th>0-30 días</th><th>31-60 días</th><th>61-90 días</th></tr></thead>
+        <tbody>
+        ${dvRows.map(r=>`<tr>
+          <td>${r.it}</td>
+          <td>${r.total>15000000?`<span class="pill red">${moneyK(r.total)}</span>`:moneyK(r.total)}</td>
+          <td>${moneyK(r.b30)}</td>
+          <td>${moneyK(r.b60)}</td>
+          <td>${moneyK(r.b90)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function chartsSellIn(){
+  const d = ventasSeries();
+  const volDisplay = d.volSeries.map(v=>v*d.um.volFactor);
+  const precioDisplay = d.precioSeries.map(v=>v*d.um.priceFactor);
+  barChart('ch-si-vol', MESES, [{label:'Volumen ('+d.um.suf+')', data:volDisplay, backgroundColor:'#8b5cf6'}], v=>num(v, d.um.dec));
+  barChart('ch-si-vn', MESES, [{label:'Venta Neta', data:d.vnSeries, backgroundColor:'#3b82f6'}], v=>moneyK(v));
+  lineChart('ch-si-mix', MESES, [{label:'Alcance de Mix', data:d.mixSeries, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.12)', fill:true, tension:.35, pointRadius:3}], {labelFormatter: v=>v.toFixed(0)+'%'});
+  lineChart('ch-si-precio', MESES, [{label:'Precio Promedio', data:precioDisplay, borderColor:'#eab308', backgroundColor:'rgba(234,179,8,.12)', fill:true, tension:.35, pointRadius:3}], {labelFormatter: v=>money(v)});
+  barChart('ch-si-clientes', MESES, [{label:'Clientes Compradores', data:d.clientesSeries, backgroundColor:'#ec4899'}], v=>num(v,0));
+}
+function stMercado(){
+  const s = fseed()+'mkt';
+  const um = UM_META[filters.um];
+  const empresa = { volumen: vary(710000,s+'vol',.15), volShare: vary(18.4,s+'vs',.1), valShare: vary(21.2,s+'vals',.1), priceIndex: vary(104,s+'pi',.05), pp: vary(2510,s+'pp',.08), dn: vary(72,s+'dn',.08), dp: vary(58,s+'dp',.1) };
+  const comp = [
+    {n:'Competidor A', volumen: vary(930000,s+'cavol',.15), volShare: vary(24.1,s+'ca',.1), valShare: vary(23.6,s+'cav',.1), priceIndex: vary(98,s+'cap',.05), dn: vary(81,s+'cadn',.08), dp: vary(69,s+'cadp',.08)},
+    {n:'Competidor B', volumen: vary(430000,s+'cbvol',.15), volShare: vary(11.3,s+'cb',.1), valShare: vary(10.5,s+'cbv',.1), priceIndex: vary(92,s+'cbp',.05), dn: vary(64,s+'cbdn',.08), dp: vary(48,s+'cbdp',.08)},
+    {n:'Marca Propia Retail', volumen: vary(375000,s+'ccvol',.15), volShare: vary(9.8,s+'cc',.1), valShare: vary(7.2,s+'ccv',.1), priceIndex: vary(76,s+'ccp',.05), dn: vary(58,s+'ccdn',.08), dp: vary(41,s+'ccdp',.08)},
+  ];
+
+  // Series mensuales por player (propio + set competitivo) para Volumen / Vol Share / Price Index
+  const players = [
+    {n:'Empresa (propio)', own:true, key:'own', volumen:empresa.volumen, volShare:empresa.volShare, priceIndex:empresa.priceIndex},
+    ...comp.map((c,i)=>({n:c.n, own:false, key:'c'+i, volumen:c.volumen, volShare:c.volShare, priceIndex:c.priceIndex})),
+  ];
+  players.forEach(p=>{
+    p.volSeries = monthlySeries(p.volumen, s+p.key+'volm', .015, .06);
+    p.volShareSeries = MESES.map((m,i)=>vary(p.volShare*(0.97+i*0.006), s+p.key+'vsm'+m, .05));
+    p.priceIdxSeries = MESES.map((m,i)=>vary(p.priceIndex*(0.99+i*0.002), s+p.key+'pim'+m, .04));
+  });
+
+  // cumplimiento mes/acumulado del propio (badges) — misma convención que Ventas
+  const volCumplMes = vary(97, s+'volcumpmes', .08);
+  const volCumplAcum = vary(99, s+'volcumpacum', .05);
+  const vsCumplMes = vary(98, s+'vscumpmes', .08);
+  const vsCumplAcum = vary(100, s+'vscumpacum', .05);
+  const piCumplMes = vary(99, s+'picumpmes', .06);
+  const piCumplAcum = vary(100, s+'picumpacum', .04);
+
+  // variación mensual del propio vs período filtrado (strips) — misma convención que Ventas
+  const volDeltas = MESES.map(m=>vary(2.2, s+'voldelta'+m, .6));
+  const vsDeltas = MESES.map(m=>vary(0.5, s+'vsdelta'+m, .7));
+  const piDeltas = MESES.map(m=>vary(-1.6, s+'pidelta'+m, .6));
+
+  function matrixTable(seriesKey, formatter){
+    return `<div style="overflow-x:auto"><table>
+      <thead><tr><th>Player</th>${MESES.map(m=>`<th>${m}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${players.map(p=>`<tr ${p.own?'style="font-weight:700"':''}><td>${p.n}</td>${p[seriesKey].map(v=>`<td>${formatter(v)}</td>`).join('')}</tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  return `
+    ${sectionTitle('Información de mercado','Fuente: Nielsen / Scentia')}
+    <div class="kpi-grid">
+      ${kpiCard('Volumen', num(empresa.volumen*um.volFactor,um.dec)+' '+um.suf, 2.4, pctStr(2.4)+' vs. LY')}
+      ${kpiCard('Vol Share', empresa.volShare.toFixed(1)+'%', 0.6, pctStr(0.6)+' vs. LY')}
+      ${kpiCard('Val Share', empresa.valShare.toFixed(1)+'%', 1.1, pctStr(1.1)+' vs. LY')}
+      ${kpiCard('Price Index', empresa.priceIndex.toFixed(0), -2.0, 'vs. categoría (100=paridad)')}
+      ${kpiCard('Distribución Numérica', empresa.dn.toFixed(0)+'%', -0.9, pctStr(-0.9))}
+      ${kpiCard('Distribución Ponderada', empresa.dp.toFixed(0)+'%', 1.4, pctStr(1.4))}
+      ${kpiCard('Precio por Unidad', money(empresa.pp*um.priceFactor)+'/'+um.suf, 4.4, pctStr(4.4))}
+    </div>
+    ${sectionTitle('Propio vs. competencia')}
+    <div class="grid-2-stretch">
+      <div class="panel">
+        <h3>Value Share — tendencia</h3>
+        <div class="panel-sub">Empresa vs. principal competidor</div>
+        <div class="chart-wrap"><canvas id="ch-st-share"></canvas></div>
+      </div>
+      <div class="panel">
+        <table><thead><tr><th>Player</th><th>Vol. Share</th><th>Value Share</th><th>Price Idx</th><th>Dist. Num.</th><th>Dist. Pond.</th></tr></thead>
+        <tbody>
+          <tr style="font-weight:700"><td>Empresa (propio)</td><td>${empresa.volShare.toFixed(1)}%</td><td>${empresa.valShare.toFixed(1)}%</td><td>${empresa.priceIndex.toFixed(0)}</td><td>${empresa.dn.toFixed(0)}%</td><td>${empresa.dp.toFixed(0)}%</td></tr>
+          ${comp.map(c=>`<tr><td>${c.n}</td><td>${c.volShare.toFixed(1)}%</td><td>${c.valShare.toFixed(1)}%</td><td>${c.priceIndex.toFixed(0)}</td><td>${c.dn.toFixed(0)}%</td><td>${c.dp.toFixed(0)}%</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>
+
+    ${sectionTitle('Volumen — propio vs. set competitivo','mensual')}
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Volumen por player</h3><div class="panel-sub">Nominal por mes (${um.suf}) — filas: SKU propio y competidores, columnas: meses</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill pill-badge ${volCumplMes>=100?'green':'orange'}">${volCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+          <span class="pill pill-badge ${volCumplAcum>=100?'green':'orange'}">${volCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+        </div>
+      </div>
+      ${matrixTable('volSeries', v=>num(v*um.volFactor,um.dec))}
+      ${monthDeltaStripHtml(volDeltas, 'Variación vs período filtrado (propio)')}
+    </div>
+
+    ${sectionTitle('Vol Share — propio vs. set competitivo','mensual')}
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Vol Share por player</h3><div class="panel-sub">% de volumen de mercado por mes — mismo armado que Volumen</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill pill-badge ${vsCumplMes>=100?'green':'orange'}">${vsCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+          <span class="pill pill-badge ${vsCumplAcum>=100?'green':'orange'}">${vsCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+        </div>
+      </div>
+      ${matrixTable('volShareSeries', v=>v.toFixed(1)+'%')}
+      ${monthDeltaStripHtml(vsDeltas, 'Variación vs período filtrado (propio)')}
+    </div>
+
+    ${sectionTitle('Price Index — propio vs. set competitivo','mensual')}
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h3>Price Index por player</h3><div class="panel-sub">100 = paridad de categoría, por mes — mismo armado que Volumen</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill pill-badge ${piCumplMes>=100?'green':'orange'}">${piCumplMes.toFixed(0)}% cumpl. ${periodoMesLabel()}</span>
+          <span class="pill pill-badge ${piCumplAcum>=100?'green':'orange'}">${piCumplAcum.toFixed(0)}% cumpl. acumulado</span>
+        </div>
+      </div>
+      ${matrixTable('priceIdxSeries', v=>v.toFixed(0))}
+      ${monthDeltaStripHtml(piDeltas, 'Variación vs período filtrado (propio)')}
+    </div>
+
+    ${sectionTitle('Indicadores clave — evolución mensual (propio)')}
+    <div class="panel">
+      <h3>Distribución, volumen, share y price index</h3>
+      <div class="panel-sub">Cada indicador con su propia banda para que las líneas no se superpongan; el valor mostrado en cada punto es el dato real de ese indicador en ese mes</div>
+      <div class="chart-wrap" style="height:340px"><canvas id="ch-mkt-indicadores"></canvas></div>
+    </div>
+  `;
+}
+function stContexto(){
+  const s = fseed()+'ctx';
+  const inflGen = vary(3.8,s+'ig',.2), inflCat = vary(4.6,s+'ic',.2);
+  const ingredientes = [
+    {n:'Pan', pct: vary(5.1,s+'i1',.3)}, {n:'Carne', pct: vary(7.4,s+'i2',.3)},
+    {n:'Queso', pct: vary(4.0,s+'i3',.3)}, {n:'Condimentos y aderezos', pct: vary(2.8,s+'i4',.3)},
+  ];
+  const indicePct = ingredientes.reduce((a,i)=>a+i.pct,0)/ingredientes.length;
+  return `
+    ${sectionTitle('Contexto macro','Inflación general y de categoría')}
+    <div class="kpi-grid">
+      ${kpiCard('Inflación general', inflGen.toFixed(1)+'%', inflGen, 'mensual')}
+      ${kpiCard('Inflación categoría (Alimentos)', inflCat.toFixed(1)+'%', inflCat, 'mensual')}
+      ${kpiCard('Índice canasta propio', pctStr(indicePct), indicePct, 'variación insumos')}
+    </div>
+
+    ${sectionTitle('Contexto macro — evolución mensual')}
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Tasa de interés</h3>
+        <div class="panel-sub">% anual de referencia, por mes</div>
+        <div class="chart-wrap"><canvas id="ch-ctx-tasa"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Inflación general</h3>
+        <div class="panel-sub">% mensual</div>
+        <div class="chart-wrap"><canvas id="ch-ctx-inflgen"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Inflación de alimentos</h3>
+        <div class="panel-sub">% mensual — categoría</div>
+        <div class="chart-wrap"><canvas id="ch-ctx-inflali"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Inflación IPIM (mayorista)</h3>
+        <div class="panel-sub">% mensual — índice de precios internos al por mayor</div>
+        <div class="chart-wrap"><canvas id="ch-ctx-ipim"></canvas></div>
+      </div>
+    </div>
+
+    ${sectionTitle('Índice Hamburguesa','Precio resultante según variación de insumos — impacto en el bolsillo del consumidor')}
+    <div class="panel">
+      <h3>Composición del índice</h3>
+      <div class="panel-sub">Variación de precio por insumo — período actual vs. anterior</div>
+      ${ingredientes.map(i=>`
+        <div class="basket-row">
+          <div style="width:190px">${i.n}</div>
+          <div class="basket-bar"><span style="width:${Math.min(100,Math.abs(i.pct)*10)}%"></span></div>
+          <div style="width:60px;text-align:right;font-weight:600">${pctStr(i.pct)}</div>
+        </div>`).join('')}
+      <div class="foot-note">El índice permite entender cómo varía el costo del producto integral (no solo el commodity principal) y cómo eso presiona la decisión de precio final al consumidor. Aplica el mismo framework a cualquier canasta representativa de la categoría.</div>
+    </div>
+  `;
+}
+function zonesSvgHtml(){
+  const completed = mapZones.map(z=>{
+    const pts = z.points.map(p=>`${p.x},${p.y}`).join(' ');
+    return `<polygon points="${pts}" fill="${z.color}33" stroke="${z.color}" stroke-width="0.4"/>`;
+  }).join('');
+  let inProgress = '';
+  if(currentZonePoints.length){
+    const pts = currentZonePoints.map(p=>`${p.x},${p.y}`).join(' ');
+    const dots = currentZonePoints.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="0.8" fill="#fff"/>`).join('');
+    inProgress = `<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="0.3" stroke-dasharray="1,1"/>${dots}`;
+  }
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">${completed}${inProgress}</svg>`;
+}
+function mapClick(e){
+  if(!drawingZone) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const xPct = ((e.clientX - rect.left)/rect.width)*100;
+  const yPct = ((e.clientY - rect.top)/rect.height)*100;
+  currentZonePoints.push({x:xPct, y:yPct});
+  renderContent();
+}
+function startDrawZone(){
+  drawingZone = true;
+  currentZonePoints = [];
+  renderContent();
+}
+function finishZone(){
+  if(currentZonePoints.length < 3){ alert('Marcá al menos 3 puntos para cerrar una zona.'); return; }
+  const name = prompt('Nombre de la zona:', 'Zona '+(mapZones.length+1));
+  if(name){
+    const colors = ['#8b5cf6','#22c55e','#3b82f6','#ec4899','#eab308','#f97316'];
+    mapZones.push({name, points: currentZonePoints, color: colors[mapZones.length % colors.length]});
+  }
+  drawingZone = false;
+  currentZonePoints = [];
+  renderContent();
+}
+function cancelZone(){
+  drawingZone = false;
+  currentZonePoints = [];
+  renderContent();
+}
+function clearZones(){
+  mapZones = [];
+  renderContent();
+}
+function removeZone(i){
+  mapZones.splice(i,1);
+  renderContent();
+}
+function pdvsRankingData(){
+  const s = fseed()+'pdvtable';
+  const estados = ['Comprador','Potencial','No comprador'];
+  const rows = PDVS_MAPA.map((p,i)=>{
+    const seed = s+p.n;
+    const estado = estados[Math.floor(rand01(hash(seed+'est'))*3)];
+    const fact = estado==='No comprador' ? 0 : vary(50000,seed+'f',.6)/(i*0.4+1);
+    const vol = estado==='No comprador' ? 0 : Math.round(vary(1000,seed+'v',.6)/(i*0.4+1));
+    const skus = estado==='No comprador' ? 0 : Math.max(1,Math.round(vary(2.5,seed+'sk',.5)));
+    const gap = vary(20000, seed+'g', .4)/(i*0.3+1);
+    const fecha = estado==='No comprador' ? '-' : `2026-0${(i%6)+1}-${10+i}`;
+    return { pdv:p.n, canal:p.canal, dist:p.dist, estado, fact, vol, skus, gap, fecha };
+  });
+  const compradores = rows.filter(r=>r.estado==='Comprador');
+  const avgVol = compradores.length ? compradores.reduce((a,r)=>a+r.vol,0)/compradores.length : 0;
+  rows.forEach(r=>{
+    if(r.estado==='No comprador'){
+      r.recomendado = true; r.tipo = 'no_compra'; r.motivo = 'No compra el producto — oportunidad de apertura'; r.score = r.gap*1.5;
+    } else if(r.estado==='Potencial'){
+      r.recomendado = true; r.tipo = 'potencial'; r.motivo = 'Cliente potencial identificado, sin activación'; r.score = r.gap*1.2;
+    } else if(avgVol && r.vol < avgVol*0.6){
+      r.recomendado = true; r.tipo = 'bajo_volumen'; r.motivo = `Compra, pero ${Math.round((1-r.vol/avgVol)*100)}% por debajo del volumen promedio del canal`; r.score = r.gap*1.1;
+    } else {
+      r.recomendado = false; r.tipo = 'ninguno'; r.motivo = 'Volumen en línea o por encima del promedio'; r.score = r.gap*0.3;
+    }
+  });
+  return rows.sort((a,b)=>b.score-a.score);
+}
+const PDV_MOTIVO_META = {
+  no_compra:    {label:'No compran',        icon:'🚫'},
+  potencial:    {label:'Potenciales sin activar', icon:'🌱'},
+  bajo_volumen: {label:'Venden por debajo del promedio', icon:'📉'},
+};
+function pdvsTabHtml(){
+  const rows = pdvsRankingData();
+  const estadoPill = {Comprador:'green', Potencial:'orange', 'No comprador':'red'};
+  const canales = [...new Set(PDVS_MAPA.map(p=>p.canal))];
+  const allChecked = rows.length>0 && rows.every(r=>pdvSelected.has(r.pdv));
+  const sugeridos = rows.filter(r=>r.recomendado);
+  const motivoTipos = Object.keys(PDV_MOTIVO_META).map(tipo=>({tipo, ...PDV_MOTIVO_META[tipo], count: rows.filter(r=>r.tipo===tipo).length}));
+  return `
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Armar grupo de PDVs</h3>
+      <div class="panel-sub">Seleccioná PDVs (autoservicios, almacenes, supermercados, etc.) y guardalos como grupo para direccionar dinámicas promocionales en RGM</div>
+      <div class="nexus-block" style="margin-top:12px;background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 14px">
+        <p style="margin:0"><strong>🎯 ${sugeridos.length} PDV${sugeridos.length===1?'':'s'} sugerido${sugeridos.length===1?'':'s'} para una dinámica:</strong> ordenamos la tabla por prioridad — primero los que no compran el producto, después potenciales sin activar, y por último compradores con volumen debajo del promedio del canal. Usá los botones de abajo para seleccionar cada grupo de oportunidad de un click, sin tildar uno por uno.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px">
+        <span style="font-size:11.5px;color:var(--text-dim)">Por tipo de oportunidad:</span>
+        <span class="pill pink" style="cursor:pointer" onclick="selectPdvsPorMotivo(null)">🎯 Todos los sugeridos (${sugeridos.length})</span>
+        ${motivoTipos.filter(m=>m.count>0).map(m=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorMotivo('${m.tipo}')">${m.icon} ${m.label} (${m.count})</span>`).join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">
+        <span style="font-size:11.5px;color:var(--text-dim)">Por canal:</span>
+        ${canales.map(c=>`<span class="pill blue" style="cursor:pointer" onclick="selectPdvsByCanal('${c}')">${c}</span>`).join('')}
+        <span class="pill gray" style="cursor:pointer" onclick="selectPdvsByCanal(null)">Ninguno</span>
+      </div>
+      <div class="simbar" style="margin-top:12px">
+        <div class="simfield" style="min-width:220px"><label>Nombre del grupo</label>
+          <input type="text" placeholder="Ej: Almacenes GBA Norte" value="${pdvGrupoNombreDraft}" onchange="pdvGrupoNombreDraft=this.value">
+        </div>
+        <div class="simfield" style="flex-direction:row;gap:8px;align-items:flex-end">
+          <button class="btn" ${pdvSelected.size===0?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="savePdvGrupo()">💾 Guardar grupo (${pdvSelected.size} PDV${pdvSelected.size===1?'':'s'})</button>
+        </div>
+      </div>
+      ${pdvGrupos.length ? `
+      <div style="margin-top:14px">
+        <div class="panel-sub" style="margin-bottom:6px">Grupos guardados</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${pdvGrupos.map(g=>`<span class="pill pink" style="display:inline-flex;align-items:center;gap:6px">
+            ${g.nombre} (${g.pdvs.length})
+            <a style="color:inherit;text-decoration:underline;cursor:pointer" onclick="useGrupoInRgm('${g.id}')">usar en RGM</a>
+            <span style="cursor:pointer" onclick="removePdvGrupo('${g.id}')">✕</span>
+          </span>`).join('')}
+        </div>
+      </div>` : ''}
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th><input type="checkbox" ${allChecked?'checked':''} onchange="toggleAllPdvSelected()"></th><th>PDV</th><th>Canal</th><th>Distribuidor</th><th>Estado</th><th>Facturación</th><th>Volumen</th><th>SKUs</th><th>Última Compra</th><th>GAP</th><th>Sugerido</th></tr></thead>
+      <tbody>
+      ${rows.map(r=>`<tr style="${r.recomendado?'background:rgba(139,92,246,.05)':''}">
+        <td><input type="checkbox" ${pdvSelected.has(r.pdv)?'checked':''} onchange="togglePdvSelected('${r.pdv}')"></td>
+        <td>${r.pdv}</td>
+        <td>${r.canal}</td>
+        <td>${r.dist}</td>
+        <td><span class="pill ${estadoPill[r.estado]}">${r.estado}</span></td>
+        <td>${r.fact?money(r.fact):'$0'}</td>
+        <td>${r.vol}</td>
+        <td>${r.skus}</td>
+        <td>${r.fecha}</td>
+        <td><span class="pill green">${money(r.gap)}</span></td>
+        <td>${r.recomendado ? `<span class="pill pink" title="${r.motivo}">🎯 Sí</span>` : `<span class="pill gray">No</span>`}<div style="font-size:10.5px;color:var(--text-dim);margin-top:3px;max-width:180px">${r.motivo}</div></td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+function togglePdvSelected(n){
+  if(pdvSelected.has(n)) pdvSelected.delete(n); else pdvSelected.add(n);
+  renderContent();
+}
+function toggleAllPdvSelected(){
+  const rows = pdvsRankingData();
+  const allChecked = rows.every(r=>pdvSelected.has(r.pdv));
+  if(allChecked) rows.forEach(r=>pdvSelected.delete(r.pdv));
+  else rows.forEach(r=>pdvSelected.add(r.pdv));
+  renderContent();
+}
+function selectPdvsByCanal(canal){
+  pdvSelected = new Set(canal ? PDVS_MAPA.filter(p=>p.canal===canal).map(p=>p.n) : []);
+  renderContent();
+}
+function selectPdvsPorMotivo(tipo){
+  const rows = pdvsRankingData();
+  pdvSelected = new Set(rows.filter(r=> tipo ? r.tipo===tipo : r.recomendado).map(r=>r.pdv));
+  renderContent();
+}
+function savePdvGrupo(){
+  if(pdvSelected.size===0) return;
+  const nombre = pdvGrupoNombreDraft.trim() || `Grupo ${pdvGrupos.length+1}`;
+  pdvGrupos.push({ id: 'g'+Date.now(), nombre, pdvs: Array.from(pdvSelected) });
+  pdvSelected = new Set();
+  pdvGrupoNombreDraft = '';
+  renderContent();
+}
+function removePdvGrupo(id){
+  pdvGrupos = pdvGrupos.filter(g=>g.id!==id);
+  if(rgmSim.grupoPdvId===id) rgmSim.grupoPdvId = null;
+  renderContent();
+}
+function useGrupoInRgm(id){
+  rgmSim.grupoPdvId = id;
+  setView('rgm');
+  setTimeout(()=>{ document.querySelector('.simbar')?.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
+}
+function goToMapaPdvs(){
+  sellthroughTab = 'mapa'; mapaAnalysisTab = 'pdvs';
+  setView('sellthrough');
+}
+function stMixData(){
+  const s = fseed()+'mapmix';
+  return PRODUCTOS_MAPA.map(p=>{
+    const seed = s+p.n;
+    const compradores = Math.round(vary(300,seed+'c',.4));
+    const dnReal = vary(70,seed+'dn',.2);
+    const objetivo = vary(80,seed+'obj',.15);
+    const gap = objetivo-dnReal;
+    const volumen = Math.round(vary(20000,seed+'v',.5));
+    const facturacion = vary(1000000,seed+'f',.4);
+    const tendencia = (rand01(hash(seed+'t'))-0.5)*24;
+    const mixReal = vary(20,seed+'mr',.35);
+    const mixObjetivo = vary(20,seed+'mo',.3);
+    return {...p, compradores, dnReal, objetivo, gap, volumen, facturacion, tendencia, mixReal, mixObjetivo};
+  });
+}
+function mixTabHtml(){
+  const rows = stMixData();
+  return `
+    <div class="grid-2-stretch">
+      <div class="panel">
+        <h3>Productos y clientes compradores</h3>
+        <div style="overflow-x:auto;margin-top:8px">
+        <table>
+          <thead><tr><th>SKU</th><th>Categoría</th><th>Compradores</th><th>DN Real</th><th>Objetivo</th><th>GAP</th><th>Volumen</th><th>Facturación</th><th>Tendencia</th></tr></thead>
+          <tbody>
+            ${rows.map(r=>`<tr>
+              <td style="font-weight:700">${r.n}</td>
+              <td>${r.cat}</td>
+              <td>${r.compradores}</td>
+              <td>${r.dnReal.toFixed(0)}%</td>
+              <td>${r.objetivo.toFixed(0)}%</td>
+              <td><span class="pill orange">${Math.abs(r.gap).toFixed(0)}pp</span></td>
+              <td>${num(r.volumen,0)}</td>
+              <td>${moneyK(r.facturacion)}</td>
+              <td><span class="pill ${r.tendencia>=0?'green':'red'}">${pctStr(r.tendencia)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Mix real vs mix objetivo</h3>
+        <div style="display:flex;flex-direction:column;gap:16px;margin-top:12px">
+          ${rows.map(r=>{
+            const dev = r.mixReal-r.mixObjetivo;
+            return `<div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;gap:8px">
+                <span style="font-weight:600;font-size:12.5px">${r.n}</span>
+                <span class="pill ${dev>=0?'green':'red'}" style="white-space:nowrap">${Math.abs(dev).toFixed(0)}pp ${dev>=0?'sobre':'bajo'} objetivo</span>
+              </div>
+              <div style="background:#1c1c26;border-radius:6px;overflow:hidden;height:7px;margin-bottom:3px"><div style="width:${Math.min(100,r.mixReal*3)}%;height:100%;background:var(--green)"></div></div>
+              <div style="background:#1c1c26;border-radius:6px;overflow:hidden;height:7px"><div style="width:${Math.min(100,r.mixObjetivo*3)}%;height:100%;background:var(--accent)"></div></div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${r.mixReal.toFixed(0)}% / ${r.mixObjetivo.toFixed(0)}%</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function stOportunidadData(){
+  const s = fseed()+'mapopor'+oportSkuTestigo+oportSkuObjetivo;
+  const pdvsZona = Math.max(1, Math.round(vary(12, s+'z', .3)));
+  const compranTestigo = Math.max(0, Math.round(vary(pdvsZona*0.5, s+'ct', .35)));
+  const noCompranObjetivo = Math.max(0, Math.round(vary(pdvsZona*0.28, s+'nco', .35)));
+  const altoPotencial = Math.max(0, Math.round(vary(2, s+'ap', .5)));
+  const gapConversion = Math.max(0, noCompranObjetivo - Math.round(vary(1,s+'gc',.6)));
+  const oportunidadUsd = vary(72000, s+'op', .35);
+  const volumenCajas = Math.round(vary(1601, s+'vc', .35));
+  const pdvsRecomendados = Math.max(1, Math.round(vary(2, s+'pr', .4)));
+  return {pdvsZona, compranTestigo, noCompranObjetivo, altoPotencial, gapConversion, oportunidadUsd, volumenCajas, pdvsRecomendados};
+}
+function oportunidadTabHtml(){
+  const d = stOportunidadData();
+  const s = fseed()+'mapopor'+oportSkuTestigo+oportSkuObjetivo;
+  const recNames = ['Café Botánico Norte','Café Serrano','Autoservicio Honduras'];
+  const recRows = recNames.map((n,i)=>{
+    const p = PDVS_MAPA.find(x=>x.n===n);
+    const seed = s+n;
+    const oport = vary(30000-i*5000, seed+'op', .3);
+    const mixActual = vary(45-i*7, seed+'mx', .3);
+    return {n, canal:p.canal, dist:p.dist, oport, mixActual};
+  });
+  return `
+    <div class="panel">
+      <h3>Qué está mirando Nexus</h3>
+      <div class="panel-sub">El SKU testigo marca dónde la categoría ya funciona. El SKU objetivo es el producto que queremos introducir o acelerar en esos mismos PDVs.</div>
+      <div class="grid-2" style="margin-top:14px">
+        <div class="form-field"><label>SKU Testigo</label>
+          <select class="form-select" onchange="oportSkuTestigo=this.value;renderContent()">
+            ${PRODUCTOS_MAPA.map(p=>`<option ${p.n===oportSkuTestigo?'selected':''}>${p.n}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field"><label>SKU Objetivo</label>
+          <select class="form-select" onchange="oportSkuObjetivo=this.value;renderContent()">
+            ${PRODUCTOS_MAPA.map(p=>`<option ${p.n===oportSkuObjetivo?'selected':''}>${p.n}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-top:16px">
+        ${kpiCard('PDVs Zona', num(d.pdvsZona,0), 0, 'Universo seleccionado')}
+        ${kpiCard('Compran Testigo', num(d.compranTestigo,0), 0, oportSkuTestigo)}
+        ${kpiCard('No Compran Objetivo', num(d.noCompranObjetivo,0), 0, oportSkuObjetivo)}
+        ${kpiCard('Alto Potencial', num(d.altoPotencial,0), 0, 'Candidatos inmediatos')}
+        ${kpiCard('Gap Conversión', num(d.gapConversion,0), 0, 'Compradores a capturar')}
+      </div>
+    </div>
+    <div class="panel" style="border-color:rgba(139,92,246,.35);margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <h3 style="margin:0 0 4px 0">Oportunidad estimada: ${moneyK(d.oportunidadUsd)}</h3>
+          <div class="panel-sub">${d.pdvsRecomendados} PDVs recomendados para activar primero.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span class="pill blue">Volumen potencial ${num(d.volumenCajas,0)} cajas</span>
+          <button class="btn">Usar PDVs recomendados</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table><thead><tr><th>PDV recomendado</th><th>Canal</th><th>Distribuidor</th><th>Oportunidad</th><th>Mix actual</th></tr></thead>
+        <tbody>
+          ${recRows.map(r=>`<tr><td style="font-weight:700">${r.n}</td><td>${r.canal}</td><td>${r.dist}</td><td><span class="pill green">${money(r.oport)}</span></td><td>${r.mixActual.toFixed(0)}%</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>
+  `;
+}
+function promoCalc(){
+  const f = promoForm;
+  const cajas = f.volumenPorPdv * f.pdvsObjetivo;
+  const revenue = f.precioPromo * cajas;
+  const descuentoPct = f.precioActual>0 ? (f.precioActual-f.precioPromo)/f.precioActual*100 : 0;
+  const margenPct = Math.max(0, f.margenObjetivo - descuentoPct*0.3);
+  const inversionMock = revenue*0.15;
+  const contribUnit = f.precioPromo*(margenPct/100);
+  const puntoEquilibrio = contribUnit>0 ? Math.round(inversionMock/contribUnit) : 0;
+  const margenUsd = revenue*(margenPct/100);
+  const roi = inversionMock>0 ? (margenUsd-inversionMock)/inversionMock*100 : 0;
+  return {cajas, revenue, margenPct, puntoEquilibrio, roi, inversionMock, margenUsd};
+}
+function seguimientoPromosData(){
+  const first = promoCalc();
+  return [
+    {n: promoForm.nombre, ini:'2026-06-24', fin:'2026-07-24', estado:'En planificación', pdvsPlan:promoForm.pdvsObjetivo, pdvsReal:0, volPlan:first.cajas, volReal:0, factPlan:first.revenue, factReal:0, margenPlan:first.margenPct, margenDesvio:0, semanas:[0,0,0,0], proxima:'Validar mecánica con RGM, confirmar PDVs objetivo y cargar primera lectura semanal.'},
+    {n:'Impulso Vodka Premium en CABA Norte', ini:'2026-06-03', fin:'2026-07-01', estado:'En ejecución', pdvsPlan:42, pdvsReal:27, volPlan:1680, volReal:1040, factPlan:76000, factReal:47000, margenPlan:35, margenDesvio:-18, semanas:[18,30,43,61], proxima:'Acelerar activación en PDVs con compra de Gin Botánico y sin Vodka Premium.'},
+    {n:'Recuperación Espumante Brut en supermercados', ini:'2026-06-24', fin:'2026-07-21', estado:'En planificación', pdvsPlan:36, pdvsReal:0, volPlan:1440, volReal:0, factPlan:65000, factReal:0, margenPlan:32, margenDesvio:0, semanas:[0,0,0,0], proxima:'Validar inversión con RGM y alinear exhibición con distribuidores.'},
+  ];
+}
+function promoCardHtml(p){
+  const estadoPill = {'En planificación':'blue','En ejecución':'orange','Finalizada':'green'};
+  return `
+  <div class="panel" style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div><h3 style="margin:0 0 4px 0">${p.n}</h3><div class="panel-sub">${p.ini} al ${p.fin}</div></div>
+      <span class="pill ${estadoPill[p.estado]||'blue'}">${p.estado}</span>
+    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
+      <div><div class="panel-sub" style="margin-bottom:2px">PDVs Real / Plan</div><div style="font-size:19px;font-weight:700">${p.pdvsReal} / ${p.pdvsPlan}</div></div>
+      <div><div class="panel-sub" style="margin-bottom:2px">Volumen Real / Plan</div><div style="font-size:19px;font-weight:700">${num(p.volReal,0)} / ${num(p.volPlan,0)}</div></div>
+      <div><div class="panel-sub" style="margin-bottom:2px">Facturación Real / Plan</div><div style="font-size:19px;font-weight:700">${moneyK(p.factReal)} / ${moneyK(p.factPlan)}</div></div>
+      <div><div class="panel-sub" style="margin-bottom:2px">Margen / Desvío</div><div style="font-size:19px;font-weight:700;color:${p.margenDesvio>=0?'var(--green)':'var(--orange)'}">${p.margenPlan.toFixed(0)}% · ${pctStr(p.margenDesvio)}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px">
+      ${p.semanas.map((real,i)=>{
+        const ideal=(i+1)/4*100;
+        return `<div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-dim);margin-bottom:4px"><span>S${i+1}</span><span>${real.toFixed(0)}%</span></div>
+          <div style="background:#1c1c26;border-radius:5px;overflow:hidden;height:6px;margin-bottom:3px"><div style="width:${ideal}%;height:100%;background:var(--accent)"></div></div>
+          <div style="background:#1c1c26;border-radius:5px;overflow:hidden;height:6px"><div style="width:${real}%;height:100%;background:#2dd4bf"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="foot-note">Próxima acción: ${p.proxima}</div>
+  </div>`;
+}
+function activacionTabHtml(){
+  const f = promoForm;
+  const c = promoCalc();
+  const field = (label, key, type='text') => `
+    <div class="form-field">
+      <label>${label}</label>
+      <input class="form-input" type="${type}" value="${f[key]}"
+        onchange="promoForm.${key}=this.type==='number'?Number(this.value):this.value;renderContent()">
+    </div>`;
+  return `
+    <div class="panel">
+      <h3>Diseñar promoción para PDVs objetivo</h3>
+      <div class="panel-sub">Esta herramienta convierte una oportunidad comercial en una promoción medible. Los PDVs pueden venir de la recomendación de SKU o de la zona seleccionada, y podés ajustar cualquier input antes de crearla.</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
+        ${kpiCard('PDVs Objetivo', f.pdvsObjetivo+' locales', 0, 'Estimación inicial sobre PDVs no compradores o potenciales de la zona')}
+        ${kpiCard('Mecánica Actual', f.mecanica, 0, `${(100-(f.precioPromo/f.precioActual*100)).toFixed(0)}% de descuento vs precio actual`)}
+        ${kpiCard('Hipótesis Comercial', f.hipotesis.length>34?f.hipotesis.slice(0,34)+'…':f.hipotesis, 0, '')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px">
+        ${field('Nombre de campaña','nombre')}
+        <div class="form-field">
+          <label>Mecánica promocional</label>
+          <select class="form-select" onchange="promoForm.mecanica=this.value;renderContent()">
+            ${['Precio especial','2x1','Descuento por volumen','Exhibición + descuento'].map(m=>`<option ${m===f.mecanica?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        ${field('Duración de la promo (semanas)','duracion','number')}
+        ${field('Precio actual','precioActual','number')}
+        ${field('Precio promo','precioPromo','number')}
+        ${field('Volumen esperado por PDV','volumenPorPdv','number')}
+        ${field('PDVs objetivo','pdvsObjetivo','number')}
+        ${field('Margen objetivo (%)','margenObjetivo','number')}
+        ${field('Hipótesis / objetivo','hipotesis')}
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-top:18px">
+        ${kpiCard('Revenue Estimado', moneyK(c.revenue), 0, num(c.cajas,0)+' cajas')}
+        ${kpiCard('Margen Estimado', c.margenPct.toFixed(0)+'%', 0, 'vs. objetivo')}
+        ${kpiCard('Punto Equilibrio', num(c.puntoEquilibrio,0), 0, 'Cajas necesarias')}
+        ${kpiCard('ROI Estimado', c.roi.toFixed(0)+'%', 0, moneyK(c.margenUsd||0))}
+      </div>
+      <div class="foot-note" style="margin-top:14px"><strong style="color:var(--text)">Cómo se calcula:</strong> Revenue = precio promo x volumen esperado por PDV x PDVs objetivo. El volumen sale de los inputs editables. El margen se recalcula contra el descuento aplicado. El punto de equilibrio estima cajas mínimas para cubrir una inversión mock por local.</div>
+      <div class="nexus-block" style="margin-top:14px;background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:12px 14px">
+        <p style="margin:0"><strong>Recomendación:</strong> guardar la promoción para seguimiento. Conserva margen objetivo y apunta a PDVs con evidencia de categoría.</p>
+      </div>
+      <div style="margin-top:16px"><button class="btn">Crear promoción y seguimiento</button></div>
+    </div>
+
+    ${sectionTitle('Seguimiento de promociones')}
+    <div class="panel">
+      <h3>Cómo leer esta sección</h3>
+      <div class="panel-sub">Cada tarjeta mezcla plan vs real. El plan viene de la promoción creada arriba. El real se simula desde las fuentes demo de ventas PDV/SKU, cobertura por zona y ejecución trade.</div>
+    </div>
+    ${seguimientoPromosData().map(promoCardHtml).join('')}
+  `;
+}
+function askNexusMapa(q){
+  q = (q||'').trim();
+  if(!q) return;
+  const tab = mapaAnalysisTab;
+  mapaChatMessages[tab].push({role:'user', text:q});
+  mapaChatMessages[tab].push({role:'ai', html: generateNexusResponseMapa(tab,q)});
+  renderContent();
+}
+function generateNexusResponseMapa(tab,q){
+  let diagnostico, insight, iniciativas;
+  if(tab==='mix'){
+    const rows = stMixData();
+    const worst = [...rows].sort((a,b)=>b.gap-a.gap)[0];
+    diagnostico = `${worst.n} tiene el mayor GAP de distribución numérica (${worst.gap.toFixed(0)}pp) sobre el objetivo, con ${worst.compradores} compradores activos.`;
+    insight = 'El mix está limitado más por cobertura que por rotación en el punto de venta que ya compra.';
+    iniciativas = [`Priorizar activación de ${worst.n} en la zona seleccionada.`, 'Cruzar el listado de No Compradores con el universo de PDVs del canal principal.', 'Fijar un objetivo de DN a 60 días para ese SKU.'];
+  } else if(tab==='oportunidad'){
+    const d = stOportunidadData();
+    diagnostico = `Con ${oportSkuTestigo} como testigo y ${oportSkuObjetivo} como objetivo, hay ${d.gapConversion} PDVs con conversión pendiente sobre ${d.pdvsZona} en la zona.`;
+    insight = `La oportunidad estimada de ${moneyK(d.oportunidadUsd)} se concentra en pocos PDVs de alto potencial — conviene priorizar antes de escalar a toda la zona.`;
+    iniciativas = ['Usar los PDVs recomendados como piloto antes de escalar.', 'Confirmar disponibilidad de stock del SKU objetivo en el distribuidor asignado.', 'Medir conversión a 30 días post-activación.'];
+  } else if(tab==='activacion'){
+    const c = promoCalc();
+    diagnostico = `La promo "${promoForm.nombre}" proyecta ${moneyK(c.revenue)} de revenue con ${c.margenPct.toFixed(0)}% de margen y ROI estimado de ${c.roi.toFixed(0)}%.`;
+    insight = c.roi>=50 ? 'El ROI proyectado es sólido — el riesgo principal es de ejecución (cobertura de PDVs), no de diseño de la promo.' : 'El ROI proyectado es ajustado — conviene revisar el descuento o el volumen esperado antes de lanzar.';
+    iniciativas = ['Confirmar el punto de equilibrio con RGM antes de aprobar.', 'Priorizar los PDVs con mejor historial de cumplimiento.', 'Agendar una lectura semanal para ajustar mecánica si el real se desvía del plan.'];
+  } else {
+    diagnostico = `Sobre "${q}": en la zona seleccionada hay PDVs con estados mixtos entre Comprador, Potencial y No comprador — ver el detalle en la tabla de PDVs y ranking.`;
+    insight = 'No tengo un caso de uso específico armado para esta pregunta en el mockup — en producción, Nexus AI cruzaría esto con el universo real de PDVs y el histórico de compra.';
+    iniciativas = ['Afinar la pregunta con un PDV, canal o distribuidor puntual.', 'Revisar el GAP de la tabla de PDVs para priorizar.', 'Sumar esta pregunta al set de casos de uso a entrenar.'];
+  }
+  return `
+    <div class="nexus-block"><span class="nb-tag">📊 Diagnóstico</span><p>${diagnostico}</p></div>
+    <div class="nexus-block"><span class="nb-tag">💡 Insight</span><p>${insight}</p></div>
+    <div class="nexus-block"><span class="nb-tag">🚀 Iniciativas</span><ul>${iniciativas.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+  `;
+}
+function nexusChatPanelHtmlMapa(){
+  const tab = mapaAnalysisTab;
+  const suggestions = MAPA_CHAT_SUGGESTIONS[tab] || [];
+  const msgs = mapaChatMessages[tab] || [];
+  return `
+  <div class="panel" style="margin-top:20px;border-color:rgba(139,92,246,.35)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b3bd6);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0">✨</div>
+      <h3 style="margin:0">Preguntale a Nexus AI</h3>
+    </div>
+    <div class="panel-sub" style="margin-bottom:14px">Preguntá en lenguaje natural sobre esta selección. Nexus AI no solo diagnostica: te dice qué hacer.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      ${suggestions.map((q,i)=>`<div class="chip" onclick="askNexusMapa(MAPA_CHAT_SUGGESTIONS['${tab}'][${i}])">${q}</div>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <input id="nexusMapaChatInput" type="text" placeholder="Preguntá en lenguaje natural..." onkeydown="if(event.key==='Enter'){askNexusMapa(this.value);this.value='';}">
+      <button class="btn" onclick="const el=document.getElementById('nexusMapaChatInput');askNexusMapa(el.value);el.value='';">Preguntar →</button>
+    </div>
+    ${msgs.length ? `<div class="chat-thread">${msgs.map(renderChatMessage).join('')}</div>` : ''}
+  </div>`;
+}
+function mapaAnalysisBody(){
+  let body;
+  if(mapaAnalysisTab==='pdvs') body = pdvsTabHtml();
+  else if(mapaAnalysisTab==='mix') body = mixTabHtml();
+  else if(mapaAnalysisTab==='oportunidad') body = oportunidadTabHtml();
+  else body = activacionTabHtml();
+  return body + nexusChatPanelHtmlMapa();
+}
+function stMapa(){
+  const s = fseed()+'map';
+  const um = UM_META[filters.um];
+  const direct = ['Cadena Metro (CABA)','Hiper Andes (GBA Norte)','Distribuidora Norte (GBA Norte)','Mayorista Sur (GBA Sur)','Super Regional (Interior)'];
+  const indirect = ['Autoservicio Palermo','Almacén Don Pedro (Flores)','Kiosco Express (Belgrano)','Autoservicio San Martín','Almacén La Esquina (Quilmes)','Kiosco Central (Tigre)','Autoservicio Barrio Norte','Despensa Rivadavia'];
+  function pins(list, cls){
+    return list.map((n,i)=>{
+      const seed = hash(s+n);
+      const left = 8 + (rand01(seed)*84);
+      const top = 10 + (rand01(seed*3)*76);
+      return `<div class="pin ${cls}" style="left:${left}%;top:${top}%"><div class="tip">${n}</div></div>`;
+    }).join('');
+  }
+
+  const universo = Math.round(vary(420, s+'universo', .15));
+  const universoReal = Math.round(universo * vary(0.72, s+'ureal', .1));
+  const atendidos = Math.round(universoReal * vary(0.68, s+'atend', .1));
+  const compradores = Math.round(atendidos * vary(0.62, s+'compr', .1));
+  const noCompradores = atendidos - compradores;
+  const potenciales = Math.round((universoReal - atendidos) * vary(0.4, s+'potenc', .2));
+  const cobertura = atendidos/universoReal*100;
+  const facturacion = vary(38000000, s+'fact', .25);
+  const volumenMapa = vary(15400, s+'volm', .25);
+  const ticketProm = facturacion/compradores;
+  const mixReal = vary(34, s+'mixr', .15);
+  const mixObjetivo = vary(40, s+'mixo', .1);
+  const gapCompradores = noCompradores + (universoReal - atendidos);
+  const oportunidad = vary(9200000, s+'oport', .3);
+
+  return `
+    ${sectionTitle('Mapa de clientes','Directo (ERP) vs. Indirecto (canal tradicional) — con delimitación de zonas')}
+    <div class="grid-2-stretch">
+      <div class="panel" style="padding:10px">
+        <div style="display:flex;gap:8px;align-items:center;margin:8px 8px 10px 8px;flex-wrap:wrap">
+          <button class="btn" onclick="startDrawZone()">✏️ Dibujar zona</button>
+          <button class="btn secondary" onclick="finishZone()" ${currentZonePoints.length<3?'disabled':''}>✅ Cerrar zona (${currentZonePoints.length} pts)</button>
+          <button class="btn secondary" onclick="cancelZone()">Cancelar</button>
+          <button class="btn secondary" onclick="clearZones()">🗑️ Borrar zonas</button>
+          ${drawingZone ? `<span class="pill blue">Hacé click sobre el mapa para marcar vértices</span>` : ''}
+        </div>
+        <div class="map-wrap" onclick="mapClick(event)">
+          ${pins(direct,'direct')}
+          ${pins(indirect,'indirect')}
+          ${zonesSvgHtml()}
+        </div>
+        <div class="legend-row">
+          <span><span class="sw" style="background:var(--green)"></span>Clientes directos (${direct.length})</span>
+          <span><span class="sw" style="background:var(--orange)"></span>Clientes indirectos (${indirect.length})</span>
+        </div>
+        ${mapZones.length ? `
+        <table style="margin-top:10px"><thead><tr><th>Zona</th><th>Vértices</th><th></th></tr></thead>
+        <tbody>${mapZones.map((z,i)=>`<tr><td><span style="background:${z.color};display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></span>${z.name}</td><td>${z.points.length}</td><td><span class="pill red" style="cursor:pointer" onclick="removeZone(${i})">Eliminar</span></td></tr>`).join('')}</tbody></table>` : ''}
+        <div class="foot-note">Representación ilustrativa. En producción integra con Google Maps API (Drawing Library) para trazar zonas reales y asociarlas a metas de cobertura.</div>
+      </div>
+      <div class="panel">
+        <h3>KPIs de la selección</h3>
+        <div class="panel-sub">Universo, cobertura y oportunidad de la zona/filtro actual</div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);margin-top:12px">
+          ${kpiCard('Universo', num(universo,0), 0, 'PDVs en zona/vector')}
+          ${kpiCard('Universo Real', num(universoReal,0), 0, 'PDVs direccionables')}
+          ${kpiCard('PDVs Atendidos', num(atendidos,0), 0, 'con distribuidor asignado')}
+          ${kpiCard('Compradores', num(compradores,0), 0, 'con compra reciente')}
+          ${kpiCard('No Compradores', num(noCompradores,0), 0, 'atendidos sin compra')}
+          ${kpiCard('Con Potencial', num(potenciales,0), 0, 'con oportunidad activa')}
+          ${kpiCard('Cobertura', cobertura.toFixed(0)+'%', 0, 'atendidos / universo real')}
+          ${kpiCard('Facturación', moneyK(facturacion), 0, 'de la selección')}
+          ${kpiCard('Volumen', num(volumenMapa*um.volFactor,um.dec)+' '+um.suf, 0, 'de la selección')}
+          ${kpiCard('Ticket Promedio', money(ticketProm), 0, 'facturación / comprador')}
+          ${kpiCard('Mix Real / Objetivo', mixReal.toFixed(0)+'% / '+mixObjetivo.toFixed(0)+'%', 0, 'real vs. objetivo')}
+          ${kpiCard('Gap Compradores', num(gapCompradores,0), 0, 'PDVs sin activar')}
+          ${kpiCard('Oportunidad', moneyK(oportunidad), 0, 'revenue potencial no capturado')}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="border-color:rgba(139,92,246,.35);margin-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+        <div>
+          <h3 style="margin:0 0 4px 0">Análisis accionable de la selección</h3>
+          <div class="panel-sub">Los KPIs de esta zona se pueden llevar a proyecto como objetivos medibles.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn secondary">◎ Crear proyecto y objetivos</button>
+          <button class="btn secondary">⬇ Exportar reporte</button>
+          <button class="btn" onclick="document.getElementById('nexusMapaChatInput')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('nexusMapaChatInput')?.focus();">✨ Preguntarle a Nexus →</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <div class="chip ${mapaAnalysisTab==='pdvs'?'active-chip':''}" onclick="mapaAnalysisTab='pdvs';renderContent()">PDVs y ranking</div>
+        <div class="chip ${mapaAnalysisTab==='mix'?'active-chip':''}" onclick="mapaAnalysisTab='mix';renderContent()">Productos y mix</div>
+        <div class="chip ${mapaAnalysisTab==='oportunidad'?'active-chip':''}" onclick="mapaAnalysisTab='oportunidad';renderContent()">Oportunidad SKU</div>
+        <div class="chip ${mapaAnalysisTab==='activacion'?'active-chip':''}" onclick="mapaAnalysisTab='activacion';renderContent()">Activación y seguimiento</div>
+      </div>
+      ${mapaAnalysisBody()}
+    </div>
+  `;
+}
+function chartsSellThrough(){
+  const s = fseed();
+  if(sellthroughTab==='sellout'){
+    const so = sellOutSeries();
+    const solin = MESES.map((m,i)=>vary(1900000000*(0.85+i*0.03), s+'solin'+i, .08));
+    const solout = MESES.map((m,i)=>vary(1650000000*(0.85+i*0.03), s+'solout'+i, .08));
+    lineChart('ch-st-solin', MESES, [
+      {label:'Sell-In', data:solin, borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,.1)', tension:.3, pointRadius:2},
+      {label:'Sell-Out', data:solout, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', tension:.3, pointRadius:2},
+    ]);
+    barChart('ch-so-vn', MESES, [{label:'Venta Neta Sell-Out', data:so.vnSeries, backgroundColor:'#3b82f6'}], v=>moneyK(v));
+    lineChart('ch-so-mix', MESES, [{label:'Alcance de Mix', data:so.mixSeries, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.12)', fill:true, tension:.35, pointRadius:3}], {labelFormatter: v=>v.toFixed(0)+'%'});
+    lineChart('ch-so-precio', MESES, [{label:'Precio Promedio Sell-Out', data:so.precioSeries.map(v=>v*so.um.priceFactor), borderColor:'#eab308', backgroundColor:'rgba(234,179,8,.12)', fill:true, tension:.35, pointRadius:3}], {labelFormatter: v=>money(v)});
+  } else if(sellthroughTab==='sellin'){
+    chartsSellIn();
+  } else if(sellthroughTab==='mercado'){
+    const s2 = fseed()+'mkt';
+    const own = MESES.map((m,i)=>vary(21*(0.94+i*0.02), s2+'own'+i, .05));
+    const comp = MESES.map((m,i)=>vary(23.5*(0.98+i*0.005), s2+'comp'+i, .05));
+    lineChart('ch-st-share', MESES, [
+      {label:'Empresa', data:own, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.3, pointRadius:2},
+      {label:'Competidor A', data:comp, borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.08)', tension:.3, pointRadius:2},
+    ]);
+    // Indicadores clave del propio (mismas semillas que stMercado() para consistencia).
+    // Cada indicador se grafica en su propia banda vertical (índice Ene=100 + offset fijo por serie)
+    // para que las 6 líneas no se superpongan; el dato mostrado en cada punto es el valor REAL de ese mes.
+    const um2 = UM_META[filters.um];
+    const baseVol = vary(710000,s2+'vol',.15);
+    const baseVolShare = vary(18.4,s2+'vs',.1);
+    const baseValShare = vary(21.2,s2+'vals',.1);
+    const basePriceIdx = vary(104,s2+'pi',.05);
+    const baseDn = vary(72,s2+'dn',.08);
+    const baseDp = vary(58,s2+'dp',.1);
+    const volSeries = monthlySeries(baseVol, s2+'ownvolm', .015, .06);
+    const volShareSeries = MESES.map((m,i)=>vary(baseVolShare*(0.97+i*0.006), s2+'ownvsm'+m, .05));
+    const priceIdxSeries = MESES.map((m,i)=>vary(basePriceIdx*(0.99+i*0.002), s2+'ownpim'+m, .04));
+    const valShareSeries = MESES.map((m,i)=>vary(baseValShare*(0.97+i*0.006), s2+'ownvalsm'+m, .05));
+    const dnSeries = MESES.map((m,i)=>vary(baseDn*(0.97+i*0.005), s2+'owndnm'+m, .05));
+    const dpSeries = MESES.map((m,i)=>vary(baseDp*(0.97+i*0.006), s2+'owndpm'+m, .05));
+    const idx = (arr, offset) => { const b=arr[0]||1; return arr.map(v=>(v/b)*100 + offset); };
+    const mktIndicadores = [
+      {label:'Volumen',                 real:volSeries,       offset:0,   color:'#8b5cf6', fmt:v=>num(v*um2.volFactor,um2.dec)+' '+um2.suf},
+      {label:'Vol Share',               real:volShareSeries,  offset:22,  color:'#22c55e', fmt:v=>v.toFixed(1)+'%'},
+      {label:'Val Share',               real:valShareSeries,  offset:44,  color:'#3b82f6', fmt:v=>v.toFixed(1)+'%'},
+      {label:'Price Index',             real:priceIdxSeries,  offset:66,  color:'#eab308', fmt:v=>v.toFixed(0)},
+      {label:'Distribución Numérica',   real:dnSeries,        offset:88,  color:'#ef4444', fmt:v=>v.toFixed(0)+'%'},
+      {label:'Distribución Ponderada',  real:dpSeries,        offset:110, color:'#f97316', fmt:v=>v.toFixed(0)+'%'},
+    ];
+    lineChart('ch-mkt-indicadores', MESES, mktIndicadores.map(d=>({
+      label:d.label, data:idx(d.real, d.offset), borderColor:d.color, backgroundColor:d.color+'15', tension:.3, pointRadius:2.5,
+    })), {
+      hideYAxis: true,
+      labelFormatter: (value, context) => mktIndicadores[context.datasetIndex].fmt(mktIndicadores[context.datasetIndex].real[context.dataIndex])
+    });
+  } else if(sellthroughTab==='contexto'){
+    const sctx = fseed()+'ctx';
+    const tasa = monthlySeries(38, sctx+'tasa', .01, .08);
+    const inflGenS = monthlySeries(3.8, sctx+'infg', .01, .15);
+    const inflAliS = monthlySeries(4.6, sctx+'infa', .01, .15);
+    const inflIpimS = monthlySeries(4.2, sctx+'ipim', .01, .18);
+    lineChart('ch-ctx-tasa', MESES, [{label:'Tasa de interés', data:tasa, borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+    lineChart('ch-ctx-inflgen', MESES, [{label:'Inflación general', data:inflGenS, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+    lineChart('ch-ctx-inflali', MESES, [{label:'Inflación alimentos', data:inflAliS, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+    lineChart('ch-ctx-ipim', MESES, [{label:'Inflación IPIM', data:inflIpimS, borderColor:'#f97316', backgroundColor:'rgba(249,115,22,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+  }
+}
+
+/* ============================================================
+   VERTICAL 3 — FINANZAS
+   ============================================================ */
+function finData(){
+  const s = fseed()+'fin';
+  const meses = MESES;
+  const um = UM_META[filters.um];
+  function ratioSeries(base, tag, spread){ return meses.map(m=>vary(base, s+tag+m, spread)); }
+
+  const ventaNetaM = monthlySeries(vary(1980000000,s+'vnbase',.12), s+'vnm', .02, .07);
+  const volumenM = monthlySeries(vary(920000,s+'volbase',.12), s+'volmn', .015, .07);
+  const descRatioM = ratioSeries(0.032, 'desc', .25);
+  const cmvRatioM = ratioSeries(0.58, 'cmv', .06);
+  const gDistM = ratioSeries(0.05, 'gdist', .12);
+  const gComM = ratioSeries(0.09, 'gcom', .1);
+  const gMktM = ratioSeries(0.04, 'gmkt', .15);
+  const gAdmM = ratioSeries(0.06, 'gadm', .08);
+  const gPerM = ratioSeries(0.05, 'gper', .07);
+  const daM = ratioSeries(0.02, 'da', .1);
+  const finM = ratioSeries(0.015, 'finr', .3);
+  const impRatioM = ratioSeries(0.32, 'imp', .1);
+
+  const rows = meses.map((m,i)=>{
+    const ventaNeta = ventaNetaM[i];
+    const ventaBruta = ventaNeta/(1-descRatioM[i]);
+    const descuentos = ventaBruta-ventaNeta;
+    const cmv = ventaNeta*cmvRatioM[i];
+    const margenBruto = ventaNeta-cmv;
+    const gDist = ventaNeta*gDistM[i];
+    const gCom = ventaNeta*gComM[i];
+    const gMkt = ventaNeta*gMktM[i];
+    const gAdm = ventaNeta*gAdmM[i];
+    const gPer = ventaNeta*gPerM[i];
+    const ebitda = margenBruto-gDist-gCom-gMkt-gAdm-gPer;
+    const da = ventaNeta*daM[i];
+    const ebit = ebitda-da;
+    const finRes = ventaNeta*finM[i];
+    const rai = ebit-finRes;
+    const imp = Math.max(0,rai)*impRatioM[i];
+    const resultadoNeto = rai-imp;
+    return {ventaNeta, ventaBruta, descuentos, cmv, margenBruto, gDist, gCom, gMkt, gAdm, gPer, ebitda, da, ebit, fin:finRes, rai, imp, resultadoNeto};
+  });
+
+  const LINES = [
+    {key:'ventaBruta', label:'Venta Bruta', sign:1},
+    {key:'descuentos', label:'(-) Descuentos y Bonificaciones', sign:-1},
+    {key:'ventaNeta', label:'Venta Neta', sign:1, bold:true, subtotal:true},
+    {key:'cmv', label:'(-) Costo de Mercadería Vendida', sign:-1},
+    {key:'margenBruto', label:'Margen Bruto', sign:1, bold:true, subtotal:true},
+    {key:'gDist', label:'(-) Gastos de Distribución y Logística', sign:-1},
+    {key:'gCom', label:'(-) Gastos Comerciales y Trade', sign:-1},
+    {key:'gMkt', label:'(-) Gastos de Marketing y Publicidad', sign:-1},
+    {key:'gAdm', label:'(-) Gastos Administrativos', sign:-1},
+    {key:'gPer', label:'(-) Gastos de Personal (Estructura Comercial)', sign:-1},
+    {key:'ebitda', label:'EBITDA', sign:1, bold:true, subtotal:true},
+    {key:'da', label:'(-) Depreciaciones y Amortizaciones', sign:-1},
+    {key:'ebit', label:'EBIT', sign:1, bold:true, subtotal:true},
+    {key:'fin', label:'(-) Resultado Financiero Neto', sign:-1},
+    {key:'rai', label:'Resultado Antes de Impuestos', sign:1, bold:true, subtotal:true},
+    {key:'imp', label:'(-) Impuesto a las Ganancias', sign:-1},
+    {key:'resultadoNeto', label:'Resultado Neto', sign:1, bold:true, subtotal:true},
+  ];
+
+  const deltasByLine = {};
+  LINES.forEach(l=>{
+    deltasByLine[l.key] = meses.map(m => (rand01(hash(s+'delta'+l.key+m))-0.5) * 16);
+  });
+
+  const ventaNetaTotal = rows.reduce((a,r)=>a+r.ventaNeta,0);
+  const pnlTable = LINES.map(l=>{
+    const monthly = rows.map((r,i)=>{
+      const monto = r[l.key]*l.sign;
+      const pct = r.ventaNeta ? monto/r.ventaNeta*100 : 0;
+      const delta = deltasByLine[l.key][i];
+      return {monto, pct, delta};
+    });
+    const montoTotal = monthly.reduce((a,m)=>a+m.monto,0);
+    const pctTotal = ventaNetaTotal ? montoTotal/ventaNetaTotal*100 : 0;
+    const deltaTotal = monthly.reduce((a,m)=>a+m.delta,0)/monthly.length;
+    return {...l, monthly, total:{monto:montoTotal, pct:pctTotal, delta:deltaTotal}};
+  });
+
+  const volumenTotal = volumenM.reduce((a,v)=>a+v,0);
+  const capTrabajo = vary(310000000,s+'ct',.15);
+  const diasInv = vary(46,s+'di',.1);
+  const dso = vary(34,s+'dso',.15);
+  const dpo = vary(52,s+'dpo',.1);
+  const cce = diasInv+dso-dpo;
+  const dVol = (rand01(hash(s+'dvol'))-0.5)*10;
+  const dVenta = (rand01(hash(s+'dvta'))-0.5)*10;
+  const dCap = (rand01(hash(s+'dcap'))-0.5)*12;
+  const dDiasInv = (rand01(hash(s+'ddi'))-0.5)*10;
+  const dDso = (rand01(hash(s+'ddso'))-0.5)*10;
+  const dDpo = (rand01(hash(s+'ddpo'))-0.5)*10;
+  const dCce = (rand01(hash(s+'dcce'))-0.5)*10;
+
+  const invSecosM = monthlySeries(vary(31,s+'is',.1), s+'ism', .01, .08);
+  const invNoSecosM = monthlySeries(vary(58,s+'ins',.15), s+'insm', .01, .1);
+  const invProdTermM = monthlySeries(vary(24,s+'ipt',.12), s+'iptm', .01, .09);
+  const invTotalM = meses.map((m,i)=> invSecosM[i]*0.35 + invNoSecosM[i]*0.30 + invProdTermM[i]*0.35);
+  const invProm = {
+    secos: invSecosM.reduce((a,v)=>a+v,0)/invSecosM.length,
+    noSecos: invNoSecosM.reduce((a,v)=>a+v,0)/invNoSecosM.length,
+    prodTerm: invProdTermM.reduce((a,v)=>a+v,0)/invProdTermM.length,
+    total: invTotalM.reduce((a,v)=>a+v,0)/invTotalM.length,
+  };
+
+  const dv = vary(52000000,s+'dv2',.3);
+
+  return { s, meses, rows, LINES, pnlTable, ventaNetaTotal,
+    kpis: { volumen: volumenTotal, ventaNeta: ventaNetaTotal, capTrabajo, diasInv, dso, dpo, cce, dVol, dVenta, dCap, dDiasInv, dDso, dDpo, dCce, um },
+    inv: { invSecosM, invNoSecosM, invProdTermM, invTotalM, invProm },
+    dv,
+  };
+}
+function finDiasPagoRanking(){
+  const meta = agingDimMeta();
+  const s = ventasFseed()+'findprk';
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const diasBase = vary(34, seed+'d', .3);
+    const diasM = MESES.map(m=>vary(diasBase, seed+'dm'+m, .18));
+    const dias = diasM.reduce((a,v)=>a+v,0)/diasM.length;
+    const venta = vary(90000000, seed+'v', .4)/(i*0.5+1);
+    const delta = (rand01(hash(seed+'delta'))-0.5)*16;
+    return {it, diasM, dias, venta, delta};
+  }).sort((a,b)=>b.dias-a.dias);
+}
+function finDeudaVencidaRanking(){
+  const meta = agingDimMeta();
+  const s = ventasFseed()+'findvrk';
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const diasVencidosBase = vary(28, seed+'dv', .5);
+    const diasVencidosM = MESES.map(m=>vary(diasVencidosBase, seed+'dvm'+m, .25));
+    const diasVencidos = diasVencidosM.reduce((a,v)=>a+v,0)/diasVencidosM.length;
+    const importe = vary(9000000, seed+'imp', .5)/(i*0.4+1);
+    return {it, diasVencidosM, diasVencidos, importe};
+  }).sort((a,b)=>b.importe-a.importe);
+}
+function askNexusFinanzas(q){
+  q = (q||'').trim();
+  if(!q) return;
+  finChatMessages.push({role:'user', text:q});
+  finChatMessages.push({role:'ai', html: generateNexusResponseFinanzas(q)});
+  renderContent();
+}
+function generateNexusResponseFinanzas(q){
+  const d = finData();
+  const t = {}; d.pnlTable.forEach(l=>{ t[l.key]=l.total; });
+  const ql = q.toLowerCase();
+  let diagnostico, insight, iniciativas;
+  if(ql.includes('ebitda')){
+    diagnostico = `El EBITDA del período acumula ${moneyK(t.ebitda.monto)} (${t.ebitda.pct.toFixed(1)}% s/venta), con una variación promedio de ${pctStr(t.ebitda.delta)} vs. el período filtrado.`;
+    insight = t.ebitda.delta>=0 ? 'La rentabilidad operativa está mejorando — conviene revisar si es por eficiencia de costos o por precio.' : 'La caída de EBITDA está más explicada por la estructura de gastos que por el margen bruto — conviene revisar línea por línea en la cascada.';
+    iniciativas = ['Aislar qué línea de gasto explica la mayor parte del desvío en la cascada.', 'Comparar la evolución mensual de Margen Bruto vs. Gastos Comerciales.', 'Fijar un umbral de alerta sobre el % de Gastos s/Venta.'];
+  } else if(ql.includes('deuda') || ql.includes('vencid')){
+    const rk = finDeudaVencidaRanking();
+    const top = rk[0];
+    diagnostico = `La deuda vencida total del período es de ${moneyK(d.dv)}, con ${top.it} como el mayor concentrador (${moneyK(top.importe)}, ${top.diasVencidos.toFixed(0)} días vencidos en promedio).`;
+    insight = 'La deuda vencida suele concentrarse en pocos clientes — conviene priorizar el ranking de deuda vencida antes de accionar sobre toda la cartera.';
+    iniciativas = [`Priorizar gestión de cobranza sobre ${top.it}.`, 'Revisar condiciones comerciales de los clientes con mayor antigüedad de deuda.', 'Fijar un límite de crédito más estricto para clientes reincidentes.'];
+  } else if(ql.includes('efectivo') || ql.includes('cce') || ql.includes('capital')){
+    const k = d.kpis;
+    diagnostico = `El Ciclo de Conversión de Efectivo es de ${k.cce.toFixed(0)} días (Inventario ${k.diasInv.toFixed(0)} + Cobro ${k.dso.toFixed(0)} - Pago a Proveedores ${k.dpo.toFixed(0)}), con Capital de Trabajo de ${moneyK(k.capTrabajo)}.`;
+    insight = 'Un CCE más corto libera capital de trabajo sin necesidad de financiamiento adicional.';
+    iniciativas = ['Negociar mejores plazos de pago con proveedores clave.', 'Acelerar cobranza en los clientes con mayor DSO del ranking de días de pago.', 'Revisar el mix de inventario secos/no secos para reducir días de stock.'];
+  } else {
+    diagnostico = `Sobre "${q}": con los filtros actuales, Venta Neta del período es ${moneyK(t.ventaNeta.monto)} y Resultado Neto ${moneyK(t.resultadoNeto.monto)} (${t.resultadoNeto.pct.toFixed(1)}% s/venta).`;
+    insight = 'No tengo un caso de uso específico armado para esta pregunta en el mockup — en producción, Nexus AI cruzaría esto con el ERP financiero y contable.';
+    iniciativas = ['Afinar la pregunta sobre una línea específica del P&L.', 'Revisar la cascada de rentabilidad para más detalle.', 'Sumar esta pregunta al set de casos de uso a entrenar.'];
+  }
+  return `
+    <div class="nexus-block"><span class="nb-tag">📊 Diagnóstico</span><p>${diagnostico}</p></div>
+    <div class="nexus-block"><span class="nb-tag">💡 Insight</span><p>${insight}</p></div>
+    <div class="nexus-block"><span class="nb-tag">🚀 Iniciativas</span><ul>${iniciativas.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+  `;
+}
+function nexusChatPanelHtmlFinanzas(){
+  return `
+  <div class="panel" style="margin-bottom:20px;border-color:rgba(139,92,246,.35)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b3bd6);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0">✨</div>
+      <h3 style="margin:0">Preguntale a Nexus AI</h3>
+    </div>
+    <div class="panel-sub" style="margin-bottom:14px">Preguntá en lenguaje natural sobre Finanzas. Nexus AI no solo diagnostica: te dice qué hacer.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      ${FIN_CHAT_SUGGESTIONS.map((q,i)=>`<div class="chip" onclick="askNexusFinanzas(FIN_CHAT_SUGGESTIONS[${i}])">${q}</div>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <input id="nexusFinChatInput" type="text" placeholder="Preguntá en lenguaje natural..." onkeydown="if(event.key==='Enter'){askNexusFinanzas(this.value);this.value='';}">
+      <button class="btn" onclick="const el=document.getElementById('nexusFinChatInput');askNexusFinanzas(el.value);el.value='';">Preguntar →</button>
+    </div>
+    ${finChatMessages.length ? `<div class="chat-thread">${finChatMessages.map(renderChatMessage).join('')}</div>` : ''}
+  </div>`;
+}
+function viewFinanzas(){
+  const d = finData();
+  const k = d.kpis;
+  const agMeta = agingDimMeta();
+  const dpRanking = finDiasPagoRanking();
+  const dvRanking = finDeudaVencidaRanking();
+  const dvAntig = agingRows(d.dv, 'findvantig');
+
+  return `
+    ${stFilterBarHtml()}
+    ${nexusChatPanelHtmlFinanzas()}
+
+    ${sectionTitle('P&L','Resumen del período — todos los meses filtrados')}
+    <div class="panel">
+      <div style="overflow-x:auto">
+      <table class="table-compact">
+        <thead>
+          <tr><th rowspan="2">Concepto</th>${d.meses.map(m=>`<th colspan="3" style="text-align:center">${m}</th>`).join('')}<th colspan="3" style="text-align:center">Total</th></tr>
+          <tr>${d.meses.map(()=>`<th>Monto</th><th>% Vta</th><th>Var.</th>`).join('')}<th>Monto</th><th>% Vta</th><th>Var.</th></tr>
+        </thead>
+        <tbody>
+          ${d.pnlTable.map(l=>`<tr style="${l.bold?'font-weight:700':''}">
+            <td>${l.label}</td>
+            ${l.monthly.map(mo=>`<td>${moneyK(mo.monto)}</td><td>${mo.pct.toFixed(1)}%</td><td style="color:${mo.delta>=0?'var(--green)':'var(--red)'}">${pctStr(mo.delta)}</td>`).join('')}
+            <td>${moneyK(l.total.monto)}</td><td>${l.total.pct.toFixed(1)}%</td><td style="color:${l.total.delta>=0?'var(--green)':'var(--red)'}">${pctStr(l.total.delta)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="foot-note">Total = sumatoria de los meses del período filtrado. Var. = variación mensual vs. período filtrado.</div>
+    </div>
+
+    ${sectionTitle('Cascada de rentabilidad','De Venta Bruta a Resultado Neto — total del período')}
+    <div class="panel">
+      <div class="panel-sub">Puente completo de rentabilidad: ingresos, costo de mercadería, gastos operativos, resultado financiero e impuestos</div>
+      <div class="chart-wrap" style="height:380px"><canvas id="ch-fin-pnl"></canvas></div>
+    </div>
+
+    ${sectionTitle('KPIs')}
+    <div class="kpi-grid">
+      ${kpiCardClean('Volumen', num(k.volumen*k.um.volFactor,k.um.dec)+' '+k.um.suf, k.dVol)}
+      ${kpiCardClean('Venta Neta', moneyK(k.ventaNeta), k.dVenta)}
+      ${kpiCardClean('Capital de Trabajo', moneyK(k.capTrabajo), k.dCap)}
+      ${kpiCardClean('Días de Inventario', k.diasInv.toFixed(0)+' días', k.dDiasInv)}
+      ${kpiCardClean('Días de Cobro (DSO)', k.dso.toFixed(0)+' días', k.dDso)}
+      ${kpiCardClean('Días de Pago a Proveedores (DPO)', k.dpo.toFixed(0)+' días', k.dDpo)}
+      ${kpiCardClean('Ciclo de Conversión de Efectivo', k.cce.toFixed(0)+' días', k.dCce)}
+    </div>
+
+    ${sectionTitle('Días de inventario de insumos','Apertura por tipo — mensual')}
+    <div class="grid-2-stretch">
+      <div class="panel">
+        <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Tipo de insumo</th>${d.meses.map(m=>`<th>${m}</th>`).join('')}<th>Prom. período</th></tr></thead>
+          <tbody>
+            <tr><td>Secos</td>${d.inv.invSecosM.map(v=>`<td>${v.toFixed(0)}</td>`).join('')}<td>${d.inv.invProm.secos.toFixed(0)}</td></tr>
+            <tr><td>No secos (refrigerados/perecederos)</td>${d.inv.invNoSecosM.map(v=>`<td>${v.toFixed(0)}</td>`).join('')}<td>${d.inv.invProm.noSecos.toFixed(0)}</td></tr>
+            <tr><td>Producto Terminado</td>${d.inv.invProdTermM.map(v=>`<td>${v.toFixed(0)}</td>`).join('')}<td>${d.inv.invProm.prodTerm.toFixed(0)}</td></tr>
+            <tr style="font-weight:700"><td>Total ponderado</td>${d.inv.invTotalM.map(v=>`<td>${v.toFixed(0)}</td>`).join('')}<td>${d.inv.invProm.total.toFixed(0)}</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="foot-note">Días de inventario — "Prom. período" es el promedio (no la suma) de los meses filtrados, porque es una métrica de stock, no de flujo. Clasificación configurable — también puede abrirse por materia prima, envases y producto terminado.</div>
+      </div>
+      <div class="panel">
+        <h3>Inventario por tipo</h3>
+        <div class="panel-sub">Mezcla secos / no secos / producto terminado — promedio del período</div>
+        <div class="chart-wrap"><canvas id="ch-fin-inv"></canvas></div>
+      </div>
+    </div>
+
+    ${sectionTitle('Días de Pago y Deuda Vencida')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver por</label>
+          <select onchange="agingDim=this.value;renderContent()">
+            <option value="cliente" ${agingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${agingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${agingDim==='region'?'selected':''}>Región</option>
+          </select>
+        </div>
+      </div>
+
+      <h3>Ranking de Días de Pago</h3>
+      <div class="panel-sub">Clientes / canales / regiones — días de pago por mes. Venta Neta y Variación representan el período filtrado.</div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr><th rowspan="2">${agMeta.label}</th><th colspan="${d.meses.length}" style="text-align:center">Días de Pago</th><th rowspan="2">Venta Neta<br><span style="font-weight:400;font-size:10px;color:var(--text-dim)">período filtrado</span></th><th rowspan="2">Variación<br><span style="font-weight:400;font-size:10px;color:var(--text-dim)">período filtrado</span></th></tr>
+          <tr>${d.meses.map(m=>`<th>${m}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${dpRanking.map(r=>`<tr><td>${r.it}</td>${r.diasM.map(v=>`<td>${v.toFixed(0)}</td>`).join('')}<td>${moneyK(r.venta)}</td><td style="color:${r.delta>=0?'var(--red)':'var(--green)'}">${pctStr(r.delta)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+
+      <h3 style="margin-top:22px">Ranking de Deuda Vencida</h3>
+      <div class="panel-sub">Clientes / canales / regiones — días vencidos por mes. Importe Vencido representa el período filtrado.</div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr><th rowspan="2">${agMeta.label}</th><th colspan="${d.meses.length}" style="text-align:center">Días Vencidos</th><th rowspan="2">Importe Vencido<br><span style="font-weight:400;font-size:10px;color:var(--text-dim)">período filtrado</span></th></tr>
+          <tr>${d.meses.map(m=>`<th>${m}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${dvRanking.map(r=>`<tr><td>${r.it}</td>${r.diasVencidosM.map(v=>`<td>${v.toFixed(0)}</td>`).join('')}<td>${r.importe>15000000?`<span class="pill red">${moneyK(r.importe)}</span>`:moneyK(r.importe)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+
+      <h3 style="margin-top:22px">Deuda Vencida por Antigüedad</h3>
+      <div class="panel-sub">Importe vencido (fuera de término), por antigüedad</div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>${agMeta.label}</th><th>Importe Total Vencido</th><th>0-30 días</th><th>31-60 días</th><th>61-90 días</th></tr></thead>
+        <tbody>
+          ${dvAntig.map(r=>`<tr><td>${r.it}</td><td>${r.total>15000000?`<span class="pill red">${moneyK(r.total)}</span>`:moneyK(r.total)}</td><td>${moneyK(r.b30)}</td><td>${moneyK(r.b60)}</td><td>${moneyK(r.b90)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+function chartsFinanzas(){
+  const d = finData();
+  const T = {}; d.pnlTable.forEach(l=>{ T[l.key]=l.total.monto; });
+  const order = ['ventaBruta','descuentos','ventaNeta','cmv','margenBruto','gDist','gCom','gMkt','gAdm','gPer','ebitda','da','ebit','fin','rai','imp','resultadoNeto'];
+  const labels = ['Venta Bruta','Descuentos','Venta Neta','CMV','Margen Bruto','G. Distrib.','G. Comerciales','G. Marketing','G. Admin','G. Personal','EBITDA','D&A','EBIT','Res. Financiero','RAI','Impuestos','Resultado Neto'];
+  const subtotalKeys = new Set(['ventaBruta','ventaNeta','margenBruto','ebitda','ebit','rai','resultadoNeto']);
+  let cum = 0;
+  const bars = [], colors = [], vals = [];
+  order.forEach(key=>{
+    const v = T[key];
+    if(key==='ventaBruta'){
+      cum = v;
+      bars.push([0,cum]); colors.push('#3b82f6'); vals.push(v);
+    } else if(subtotalKeys.has(key)){
+      bars.push([0,cum]); colors.push(key==='resultadoNeto' ? (cum>=0?'#22c55e':'#ef4444') : '#8b5cf6'); vals.push(cum);
+    } else {
+      const newCum = cum+v;
+      bars.push([Math.min(cum,newCum), Math.max(cum,newCum)]); colors.push(v>=0?'#22c55e':'#ef4444'); vals.push(v);
+      cum = newCum;
+    }
+  });
+  lineChart('ch-fin-pnl', labels, [{
+    label:'$', data:bars, backgroundColor:colors, borderRadius:3, barPercentage:0.75, categoryPercentage:0.85,
+  }], {
+    type:'bar',
+    labelFormatter: (value,context) => moneyK(vals[context.dataIndex])
+  });
+  doughnutChart('ch-fin-inv', ['Secos','No secos','Producto Terminado'], [d.inv.invProm.secos, d.inv.invProm.noSecos, d.inv.invProm.prodTerm], ['#8b5cf6','#f97316','#22c55e']);
+}
+
+/* ============================================================
+   VERTICAL 4 — RGM
+   ============================================================ */
+function rgmToggle(field, val, opts){
+  return `<div class="toggle-group">
+    ${opts.map(([v,l])=>`<div class="toggle-opt ${rgmSim[field]===v?'active':''}" onclick="rgmSim.${field}='${v}';renderContent()">${l}</div>`).join('')}
+  </div>`;
+}
+function rgmSellOutDimMeta(){
+  const map = {
+    cliente: {label:'Cliente Sell-Out', items: CLIENTES_SELLOUT.slice(1)},
+    canal:   {label:'Canal', items: CANALES.slice(1)},
+    region:  {label:'Región', items: REGIONES.slice(1)},
+  };
+  return map[agingDim];
+}
+const RGM_DESC_TIPOS_BASE = [3.5, 2.0, 1.5, 4.0, 2.5];
+function rgmDescuentosPorDim(){
+  const meta = agingDimMeta();
+  const s = ventasFseed()+'rgmdesc';
+  const motivos = ['Rotación de stock','Cierre de mes','Respuesta a competencia','Apertura de PDV','Bonificación por volumen','Recupero de cliente inactivo'];
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const rates = RGM_DESC_TIPOS_BASE.map((base,ti)=> Math.max(0, vary(base, seed+'r'+ti, .5)));
+    const total = rates.reduce((a,v)=>a+v,0);
+    const motivo = motivos[Math.floor(rand01(hash(seed+'mot'))*motivos.length)];
+    return {it, rates, total, motivo};
+  }).sort((a,b)=>b.total-a.total);
+}
+function rgmRankingSellIn(){
+  const meta = agingDimMeta();
+  const s = ventasFseed()+'rgmsi';
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const vn = vary(140000000, seed+'vn', .45)/(i*0.4+1);
+    return {it, vn};
+  }).sort((a,b)=>b.vn-a.vn);
+}
+function rgmRankingSellOut(){
+  const meta = rgmSellOutDimMeta();
+  const s = ventasFseed()+'rgmso';
+  return meta.items.map((it,i)=>{
+    const seed = s+it;
+    const vn = vary(118000000, seed+'vn', .45)/(i*0.4+1);
+    return {it, vn};
+  }).sort((a,b)=>b.vn-a.vn);
+}
+function rgmRankingCombinada(){
+  const si = rgmRankingSellIn();
+  const so = rgmRankingSellOut();
+  const totalSi = si.reduce((a,r)=>a+r.vn,0);
+  const totalSo = so.reduce((a,r)=>a+r.vn,0);
+  const sameUniverse = agingDim !== 'cliente';
+  if(sameUniverse){
+    const siMap = Object.fromEntries(si.map(r=>[r.it,r.vn]));
+    const soMap = Object.fromEntries(so.map(r=>[r.it,r.vn]));
+    const items = agingDimMeta().items;
+    const rows = items.map(it=>({
+      it,
+      siVn: siMap[it]||0, siShare: totalSi ? (siMap[it]||0)/totalSi*100 : 0,
+      soVn: soMap[it]||0, soShare: totalSo ? (soMap[it]||0)/totalSo*100 : 0,
+      ratio: siMap[it] ? (soMap[it]||0)/siMap[it] : null,
+    })).sort((a,b)=>b.siVn-a.siVn);
+    return { sameUniverse, rows };
+  }
+  const n = Math.max(si.length, so.length);
+  const rows = [];
+  for(let i=0;i<n;i++){
+    rows.push({
+      rank: i+1,
+      siItem: si[i]?si[i].it:null, siVn: si[i]?si[i].vn:0, siShare: si[i]&&totalSi?si[i].vn/totalSi*100:0,
+      soItem: so[i]?so[i].it:null, soVn: so[i]?so[i].vn:0, soShare: so[i]&&totalSo?so[i].vn/totalSo*100:0,
+    });
+  }
+  return { sameUniverse, rows };
+}
+function rgmRankingHtml(){
+  const { sameUniverse, rows } = rgmRankingCombinada();
+  const agMeta = agingDimMeta();
+  const soMeta = rgmSellOutDimMeta();
+  const bar = (pct,color)=>`<div style="background:#1c1c26;border-radius:6px;overflow:hidden;height:6px;margin-top:3px;min-width:60px"><div style="width:${Math.min(100,pct)}%;height:100%;background:${color}"></div></div>`;
+  if(sameUniverse){
+    return `
+    <div class="panel">
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>${agMeta.label}</th><th>Sell-In (Venta Neta)</th><th>Sell-Out (Venta Neta)</th><th>Rotación SO/SI</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>`<tr>
+            <td style="font-weight:700">${r.it}</td>
+            <td>${moneyK(r.siVn)}<span style="color:var(--text-dim);font-size:11px"> · ${r.siShare.toFixed(1)}%</span>${bar(r.siShare*(100/Math.max(...rows.map(x=>x.siShare),1)),'#8b5cf6')}</td>
+            <td>${moneyK(r.soVn)}<span style="color:var(--text-dim);font-size:11px"> · ${r.soShare.toFixed(1)}%</span>${bar(r.soShare*(100/Math.max(...rows.map(x=>x.soShare),1)),'#3b82f6')}</td>
+            <td>${r.ratio!==null ? `<span class="pill ${r.ratio>=1?'green':'orange'}">${r.ratio.toFixed(2)}x</span>` : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="foot-note">Rotación SO/SI = Venta Neta Sell-Out / Venta Neta Sell-In. Mayor a 1x indica que el canal está vendiendo más de lo que le estamos facturando (des-stockeo); menor a 1x indica acumulación de stock en el canal.</div>
+    </div>`;
+  }
+  return `
+  <div class="panel">
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>#</th><th>Sell-In — ${agMeta.label}</th><th>Venta Neta</th><th>Sell-Out — ${soMeta.label}</th><th>Venta Neta</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr>
+          <td>${r.rank}</td>
+          <td style="font-weight:700">${r.siItem||'—'}</td>
+          <td>${r.siItem?moneyK(r.siVn):'—'}<span style="color:var(--text-dim);font-size:11px">${r.siItem?' · '+r.siShare.toFixed(1)+'%':''}</span></td>
+          <td style="font-weight:700">${r.soItem||'—'}</td>
+          <td>${r.soItem?moneyK(r.soVn):'—'}<span style="color:var(--text-dim);font-size:11px">${r.soItem?' · '+r.soShare.toFixed(1)+'%':''}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div class="foot-note">A nivel cliente, Sell-In (nuestros clientes/distribuidores directos) y Sell-Out (tiendas/PDVs a los que ellos venden) son universos distintos — se muestran emparejados por ranking, no por relación 1 a 1.</div>
+  </div>`;
+}
+function askNexusRGM(q){
+  q = (q||'').trim();
+  if(!q) return;
+  rgmChatMessages.push({role:'user', text:q});
+  rgmChatMessages.push({role:'ai', html: generateNexusResponseRGM(q)});
+  renderContent();
+}
+function generateNexusResponseRGM(q){
+  const k = ventasKpis();
+  const descRows = rgmDescuentosPorDim();
+  const ql = q.toLowerCase();
+  let diagnostico, insight, iniciativas;
+  if(ql.includes('descuento')){
+    const top = descRows[0];
+    diagnostico = `${top.it} concentra el mayor descuento total del período (${moneyK(top.total)}), con "${top.motivo}" como motivo principal.`;
+    insight = 'Buena parte del descuento suele concentrarse en pocos clientes sin necesariamente traducirse en mejor resultado — conviene cruzar descuento vs. crecimiento de volumen antes de renovar la condición.';
+    iniciativas = [`Revisar el ROI de la inversión sobre ${top.it} antes de renovar la condición.`, 'Comparar el mix de tipos de descuento entre los top 3 clientes del listado.', 'Fijar un tope de descuento total como % de venta neta por cliente.'];
+  } else if(ql.includes('roi') || ql.includes('dinámica') || ql.includes('dinamica')){
+    diagnostico = 'Las dinámicas en curso muestran resultados dispares — algunas superan el objetivo de volumen con buen ROI, otras están por debajo de 1x.';
+    insight = 'El ROI bajo suele estar asociado a mecánicas aplicadas de forma pareja, sin targeting — el simulador de arriba está pensado justamente para corregir eso antes de lanzar.';
+    iniciativas = ['Pausar o reformular las dinámicas con ROI menor a 1x en el seguimiento.', 'Priorizar budget hacia los clientes con mayor gap score del simulador.', 'Fijar una revisión quincenal de seguimiento de dinámicas.'];
+  } else if(ql.includes('budget') || ql.includes('invertir')){
+    diagnostico = `Con Venta Neta de ${moneyK(k.ventaNeta)} en el período filtrado, el budget promocional configurado en el simulador es de ${money(rgmSim.budget)}.`;
+    insight = 'El mayor retorno suele estar en redirigir budget hacia clientes o PDVs con gap de distribución o de volumen, no en descuentos parejos sobre toda la cartera.';
+    iniciativas = ['Usar el simulador con el cliente sell-out específico antes de asignar budget.', 'Priorizar el ranking Sell-Out para ver dónde está el mayor volumen no capturado.', 'Revisar el listado de descuentos por motivo antes de sumar nueva inversión.'];
+  } else {
+    diagnostico = `Sobre "${q}": con los filtros actuales, Venta Neta es ${moneyK(k.ventaNeta)} y Mix ${k.mix.toFixed(1)}%.`;
+    insight = 'No tengo un caso de uso específico armado para esta pregunta en el mockup — en producción, Nexus AI cruzaría esto con Ventas, Sell-Through y el histórico de dinámicas.';
+    iniciativas = ['Afinar la pregunta sobre un cliente, canal o dinámica puntual.', 'Revisar el ranking Sell-In vs. Sell-Out para más detalle.', 'Sumar esta pregunta al set de casos de uso a entrenar.'];
+  }
+  return `
+    <div class="nexus-block"><span class="nb-tag">📊 Diagnóstico</span><p>${diagnostico}</p></div>
+    <div class="nexus-block"><span class="nb-tag">💡 Insight</span><p>${insight}</p></div>
+    <div class="nexus-block"><span class="nb-tag">🚀 Iniciativas</span><ul>${iniciativas.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+  `;
+}
+function nexusChatPanelHtmlRGM(){
+  return `
+  <div class="panel" style="margin-bottom:20px;border-color:rgba(139,92,246,.35)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b3bd6);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0">✨</div>
+      <h3 style="margin:0">Preguntale a Nexus AI</h3>
+    </div>
+    <div class="panel-sub" style="margin-bottom:14px">Preguntá en lenguaje natural sobre RGM. Nexus AI no solo diagnostica: te dice qué hacer.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      ${RGM_CHAT_SUGGESTIONS.map((q,i)=>`<div class="chip" onclick="askNexusRGM(RGM_CHAT_SUGGESTIONS[${i}])">${q}</div>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <input id="nexusRgmChatInput" type="text" placeholder="Preguntá en lenguaje natural..." onkeydown="if(event.key==='Enter'){askNexusRGM(this.value);this.value='';}">
+      <button class="btn" onclick="const el=document.getElementById('nexusRgmChatInput');askNexusRGM(el.value);el.value='';">Preguntar →</button>
+    </div>
+    ${rgmChatMessages.length ? `<div class="chat-thread">${rgmChatMessages.map(renderChatMessage).join('')}</div>` : ''}
+  </div>`;
+}
+function rgmCalcPrecio(){
+  const f = rgmPriceForm;
+  const costoEstimado = f.precioActual * (1 - f.margenBrutoAsumido/100);
+  const costoRepuesto = costoEstimado * (1 + f.costoReposicion/100);
+  const precioPorCosto = costoRepuesto / (1 - f.margenObjetivo/100);
+  const passthrough = 0.8;
+  const precioPorInflacion = f.precioActual * (1 + (f.inflacion/100)*passthrough);
+  const precioBaseSugerido = (precioPorCosto + precioPorInflacion)/2;
+  const bandaMin = f.precioCompetencia*0.92;
+  const bandaMax = f.precioCompetencia*1.08;
+  const precioSugerido = Math.min(bandaMax, Math.max(bandaMin, precioBaseSugerido));
+  const ajustadoPorBanda = Math.abs(precioBaseSugerido-precioSugerido) > 0.5;
+  const deltaVsActual = (precioSugerido-f.precioActual)/f.precioActual*100;
+  const priceIndexVsComp = precioSugerido/f.precioCompetencia*100;
+  const margenResultante = (precioSugerido-costoRepuesto)/precioSugerido*100;
+  rgmPriceResult = { costoEstimado, costoRepuesto, precioPorCosto, precioPorInflacion, precioBaseSugerido, bandaMin, bandaMax, precioSugerido, ajustadoPorBanda, deltaVsActual, priceIndexVsComp, margenResultante };
+  renderContent();
+}
+function rgmSimuladorPrecioHtml(){
+  const f = rgmPriceForm;
+  const r = rgmPriceResult;
+  return `
+  <div class="panel">
+    <h3>Simulador de Precio</h3>
+    <div class="panel-sub">Considera inflación del período, variación del costo de reposición del producto y precio del set competitivo</div>
+    <div class="simbar" style="margin-top:12px">
+      <div class="simfield"><label>Producto (SKU)</label>
+        <select onchange="rgmPriceForm.sku=this.value">${SKUS.map(o=>`<option ${o===f.sku?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield"><label>Precio actual ($/kg)</label>
+        <input type="number" value="${f.precioActual}" onchange="rgmPriceForm.precioActual=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Inflación del período (%)</label>
+        <input type="number" step="0.1" value="${f.inflacion}" onchange="rgmPriceForm.inflacion=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Var. costo de reposición (%)</label>
+        <input type="number" step="0.1" value="${f.costoReposicion}" onchange="rgmPriceForm.costoReposicion=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Precio set competitivo ($/kg)</label>
+        <input type="number" value="${f.precioCompetencia}" onchange="rgmPriceForm.precioCompetencia=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Margen bruto actual asumido (%)</label>
+        <input type="number" step="0.1" value="${f.margenBrutoAsumido}" onchange="rgmPriceForm.margenBrutoAsumido=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Margen objetivo (%)</label>
+        <input type="number" step="0.1" value="${f.margenObjetivo}" onchange="rgmPriceForm.margenObjetivo=Number(this.value)">
+      </div>
+      <div class="simfield">
+        <button class="btn" onclick="rgmCalcPrecio()">💡 Calcular precio sugerido</button>
+      </div>
+    </div>
+    ${r ? `
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">
+        ${kpiCard('Precio Sugerido', money(r.precioSugerido)+'/kg', r.deltaVsActual, pctStr(r.deltaVsActual)+' vs. precio actual')}
+        ${kpiCard('Price Index vs. Competencia', r.priceIndexVsComp.toFixed(0), r.priceIndexVsComp-100, '100 = paridad')}
+        ${kpiCard('Margen Resultante', r.margenResultante.toFixed(1)+'%', r.margenResultante-f.margenObjetivo, pctStr(r.margenResultante-f.margenObjetivo)+' vs. objetivo')}
+        ${kpiCard('Banda Competitiva (±8%)', money(r.bandaMin)+' – '+money(r.bandaMax), 0, 'sobre precio del set competitivo')}
+      </div>
+      <div class="foot-note" style="margin-top:12px">
+        Cálculo: costo estimado = precio actual × (1 − margen bruto asumido) → se ajusta por la variación del costo de reposición → precio piso por costo = costo ajustado / (1 − margen objetivo). En paralelo, precio por inflación = precio actual × (1 + inflación × 80% passthrough). El precio sugerido es el promedio de ambos caminos, acotado a una banda de ±8% del precio del set competitivo${r.ajustadoPorBanda ? ' — en este cálculo, el resultado quedó fuera de esa banda y se ajustó al límite más cercano' : ''}.
+      </div>
+    ` : `<div class="empty-state" style="margin-top:16px"><div class="ico">◇</div>Ajustá los inputs y presioná "Calcular precio sugerido".</div>`}
+  </div>`;
+}
+function rgmCalcElasticidad(){
+  const f = rgmElastForm;
+  const cm0 = f.precioActual - f.costoUnitario;
+  const cmPct0 = f.precioActual ? cm0/f.precioActual*100 : 0;
+  const nuevoPrecio = f.precioActual*(1+f.variacionPrecio/100);
+  const nuevoVolumen = Math.max(0, f.volumenBase*Math.pow(1+f.variacionPrecio/100, f.elasticidad));
+  const ventaBase = f.volumenBase*f.precioActual;
+  const ventaNueva = nuevoVolumen*nuevoPrecio;
+  const deltaVenta = ventaBase ? (ventaNueva-ventaBase)/ventaBase*100 : 0;
+  const deltaVolumen = f.volumenBase ? (nuevoVolumen-f.volumenBase)/f.volumenBase*100 : 0;
+  const margenBase = f.volumenBase*cm0;
+  const cmNueva = nuevoPrecio-f.costoUnitario;
+  const margenNuevo = nuevoVolumen*cmNueva;
+  const deltaMargen = margenBase ? (margenNuevo-margenBase)/margenBase*100 : 0;
+
+  let precioOptimo = null, deltaVsOptimo = null;
+  if(f.elasticidad < -1 && f.costoUnitario>0){
+    precioOptimo = f.costoUnitario * (f.elasticidad/(f.elasticidad+1));
+    deltaVsOptimo = (precioOptimo-f.precioActual)/f.precioActual*100;
+  }
+
+  const dP = f.variacionPrecio/100, cmDec = cmPct0/100;
+  const breakEvenVolPct = (cmDec+dP)!==0 ? (-dP/(cmDec+dP))*100 : null;
+
+  const puntos = [];
+  let bestMargenIdx = -Infinity, bestMargenVar = 0;
+  for(let v=-15; v<=15; v+=2.5){
+    const p = f.precioActual*(1+v/100);
+    const vol = Math.max(0, f.volumenBase*Math.pow(1+v/100, f.elasticidad));
+    const venta = vol*p;
+    const margen = vol*(p-f.costoUnitario);
+    const ventaIdx = ventaBase? venta/ventaBase*100:0;
+    const volIdx = f.volumenBase? vol/f.volumenBase*100:0;
+    const margenIdx = margenBase? margen/margenBase*100:0;
+    if(margenIdx>bestMargenIdx){ bestMargenIdx=margenIdx; bestMargenVar=v; }
+    puntos.push({ variacion: v, ventaIdx, volIdx, margenIdx });
+  }
+
+  rgmElastResult = { cm0, cmPct0, nuevoPrecio, nuevoVolumen, ventaBase, ventaNueva, deltaVenta, deltaVolumen, margenBase, margenNuevo, deltaMargen, precioOptimo, deltaVsOptimo, breakEvenVolPct, puntos, bestMargenVar };
+  renderContent();
+}
+function rgmSimuladorElasticidadHtml(){
+  const f = rgmElastForm;
+  const r = rgmElastResult;
+  const catMeta = RGM_ELAST_CATEGORIAS.find(c=>c.id===f.categoria) || RGM_ELAST_CATEGORIAS[0];
+  return `
+  <div class="panel">
+    <h3>Simulador de Elasticidad</h3>
+    <div class="panel-sub">Modelo de elasticidad-precio constante — impacto en volumen, venta neta y margen de contribución</div>
+    <div class="simbar" style="margin-top:12px">
+      <div class="simfield" style="min-width:280px"><label>Categoría de producto (sugiere elasticidad)</label>
+        <select onchange="const c=RGM_ELAST_CATEGORIAS.find(x=>x.id===this.value);rgmElastForm.categoria=this.value;rgmElastForm.elasticidad=c.sug;renderContent()">
+          ${RGM_ELAST_CATEGORIAS.map(c=>`<option value="${c.id}" ${c.id===f.categoria?'selected':''}>${c.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="simfield"><label>Elasticidad precio-volumen</label>
+        <input type="number" step="0.1" value="${f.elasticidad}" onchange="rgmElastForm.elasticidad=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Volumen base (kg)</label>
+        <input type="number" value="${f.volumenBase}" onchange="rgmElastForm.volumenBase=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Precio actual ($/kg)</label>
+        <input type="number" value="${f.precioActual}" onchange="rgmElastForm.precioActual=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Costo unitario ($/kg)</label>
+        <input type="number" value="${f.costoUnitario}" onchange="rgmElastForm.costoUnitario=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Variación de precio a simular (%)</label>
+        <input type="number" step="0.5" value="${f.variacionPrecio}" onchange="rgmElastForm.variacionPrecio=Number(this.value)">
+      </div>
+      <div class="simfield">
+        <button class="btn" onclick="rgmCalcElasticidad()">📈 Simular elasticidad</button>
+      </div>
+    </div>
+    <div class="foot-note" style="margin-top:8px">Rango típico para "${catMeta.label}": elasticidad entre ${catMeta.min.toFixed(1)} y ${catMeta.max.toFixed(1)} (sugerida ${catMeta.sug.toFixed(1)}). Menor a -1 = elástico (el volumen reacciona más que proporcionalmente al precio); entre -1 y 0 = inelástico.</div>
+    ${r ? `
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">
+        ${kpiCard('Nuevo Precio', money(r.nuevoPrecio)+'/kg', f.variacionPrecio, pctStr(f.variacionPrecio)+' vs. precio actual')}
+        ${kpiCard('Volumen Resultante', num(r.nuevoVolumen,0)+' kg', r.deltaVolumen, pctStr(r.deltaVolumen)+' vs. volumen base')}
+        ${kpiCard('Venta Neta Resultante', moneyK(r.ventaNueva), r.deltaVenta, pctStr(r.deltaVenta)+' vs. venta neta base')}
+        ${kpiCard('Margen de Contribución Resultante', moneyK(r.margenNuevo), r.deltaMargen, pctStr(r.deltaMargen)+' vs. margen base')}
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-top:12px">
+        ${kpiCard('Margen de Contribución Actual', r.cmPct0.toFixed(1)+'%', 0, money(r.cm0)+'/kg')}
+        ${r.precioOptimo!==null ? kpiCard('Precio Óptimo de Rentabilidad', money(r.precioOptimo)+'/kg', r.deltaVsOptimo, pctStr(r.deltaVsOptimo)+' vs. precio actual') : kpiCard('Precio Óptimo de Rentabilidad', 'N/D', 0, 'elasticidad ≥ -1: sin máximo interior')}
+        ${r.breakEvenVolPct!==null ? kpiCard('Volumen de Equilibrio', pctStr(r.breakEvenVolPct), 0, f.variacionPrecio<0?'mínimo aumento de volumen para no perder margen':'máxima caída de volumen tolerable') : kpiCard('Volumen de Equilibrio','N/D',0,'')}
+      </div>
+      <div class="nexus-block" style="margin-top:14px;background:${r.deltaMargen>=0?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border:1px solid ${r.deltaMargen>=0?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'};border-radius:10px;padding:10px 14px">
+        <p style="margin:0">${r.deltaMargen>=0
+          ? `<strong>Movimiento margen-positivo:</strong> con esta elasticidad, la variación de precio simulada genera ${pctStr(r.deltaMargen)} de margen de contribución total, aun con ${pctStr(r.deltaVolumen)} de volumen.`
+          : `<strong>Alerta de rentabilidad:</strong> el volumen ganado/perdido no compensa la variación de precio — el margen de contribución total cae ${pctStr(r.deltaMargen)}.${f.variacionPrecio<0 && r.breakEvenVolPct!==null ? ` Se necesitaría al menos ${r.breakEvenVolPct.toFixed(1)}% de aumento de volumen para no perder margen.` : ''}`
+        }</p>
+        <p style="margin:6px 0 0 0;font-size:12px;color:var(--text-dim)">Dentro del rango simulado (±15%), el margen de contribución se maximiza con una variación de precio de <strong>${r.bestMargenVar>0?'+':''}${r.bestMargenVar}%</strong>.</p>
+      </div>
+      <div class="chart-wrap" style="margin-top:14px;height:280px"><canvas id="ch-rgm-elast"></canvas></div>
+      <div class="foot-note">Curvas indexadas (100 = base) de Volumen, Venta Neta y Margen de Contribución ante variaciones de precio de -15% a +15%, con la elasticidad ingresada. Modelo: Volumen = Volumen base × (1 + Δ%Precio)^elasticidad.</div>
+    ` : `<div class="empty-state" style="margin-top:16px"><div class="ico">◇</div>Elegí la categoría (o ajustá la elasticidad manualmente) y presioná "Simular elasticidad" para ver el impacto completo en volumen, venta y margen.</div>`}
+  </div>`;
+}
+function viewRGM(){
+  const k = ventasKpis();
+  const agMeta = agingDimMeta();
+  const descRows = rgmDescuentosPorDim();
+  const grupoSel = pdvGrupos.find(g=>g.id===rgmSim.grupoPdvId) || null;
+
+  return `
+    ${stFilterBarHtml()}
+    ${nexusChatPanelHtmlRGM()}
+
+    ${sectionTitle('KPIs','Mismos KPIs que Ventas — vista consolidada para decisiones de RGM')}
+    <div class="kpi-grid">
+      ${kpiCardClean('Volumen', k.volumenFmt, k.dVol)}
+      ${kpiCardClean('Venta Neta', moneyK(k.ventaNeta), k.dVenta)}
+      ${kpiCardClean('Mix', k.mix.toFixed(1)+'%', k.dMix)}
+      ${kpiCardClean('Precio Promedio', k.precioPromFmt, k.dPrecio)}
+      ${kpiCardClean('Clientes Compradores', num(k.clientes), k.dClientes)}
+      ${kpiCardClean('Días de Pago', k.diasPago.toFixed(0)+' días', k.dDiasPago)}
+      ${kpiCardClean('Deuda Vencida', moneyK(k.deudaVencida), k.dDeuda)}
+    </div>
+
+    ${sectionTitle('Descuentos por cliente / región / canal','Apertura por tipo de descuento y motivo principal')}
+    <div class="panel">
+      <div class="filterbar" style="margin-bottom:14px">
+        <div class="fgroup"><label>Ver por</label>
+          <select onchange="agingDim=this.value;renderContent()">
+            <option value="cliente" ${agingDim==='cliente'?'selected':''}>Cliente</option>
+            <option value="canal" ${agingDim==='canal'?'selected':''}>Canal</option>
+            <option value="region" ${agingDim==='region'?'selected':''}>Región</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>${agMeta.label}</th>${RGM_DESC_TIPOS.map(t=>`<th>${t}</th>`).join('')}<th>Total</th><th>Motivo Principal</th></tr></thead>
+        <tbody>
+          ${descRows.map(r=>`<tr><td>${r.it}</td>${r.rates.map(v=>`<td>${v.toFixed(1)}%</td>`).join('')}<td style="font-weight:700">${r.total.toFixed(1)}%</td><td>${r.motivo}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="foot-note">% tal como figura en factura / sistema por cada tipo de descuento (no son % sobre venta neta). Mismo selector "Ver por" aplica también al Ranking de abajo.</div>
+    </div>
+
+    ${sectionTitle('Ranking','Sell-In vs. Sell-Out — mismo selector "Ver por" que Descuentos')}
+    ${rgmRankingHtml()}
+
+    ${sectionTitle('Contexto de Inflación','Mismos datos que Sell-Through › Contexto — insumo para el simulador de precio')}
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Tasa de interés</h3>
+        <div class="panel-sub">% anual de referencia, por mes</div>
+        <div class="chart-wrap"><canvas id="ch-rgm-ctx-tasa"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Inflación general</h3>
+        <div class="panel-sub">% mensual</div>
+        <div class="chart-wrap"><canvas id="ch-rgm-ctx-inflgen"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Inflación de alimentos</h3>
+        <div class="panel-sub">% mensual — categoría</div>
+        <div class="chart-wrap"><canvas id="ch-rgm-ctx-inflali"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Inflación IPIM (mayorista)</h3>
+        <div class="panel-sub">% mensual — índice de precios internos al por mayor</div>
+        <div class="chart-wrap"><canvas id="ch-rgm-ctx-ipim"></canvas></div>
+      </div>
+    </div>
+
+    ${sectionTitle('Simulador de Precio','Inflación + costo de reposición + precio del set competitivo')}
+    ${rgmSimuladorPrecioHtml()}
+
+    ${sectionTitle('Simulador de Elasticidad','Entendé cómo reacciona el volumen y la venta neta ante un cambio de precio')}
+    ${rgmSimuladorElasticidadHtml()}
+
+    ${sectionTitle('Simulador de dinámica promocional','Elegí producto / canal / región / cliente y dejá que la IA sugiera dónde y cuánto invertir')}
+    <div class="simbar">
+      <div class="simfield"><label>Producto (SKU)</label>
+        <select onchange="rgmSim.sku=this.value">${SKUS.map(o=>`<option ${o===rgmSim.sku?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield"><label>Canal</label>
+        <select onchange="rgmSim.canal=this.value">${CANALES.map(o=>`<option ${o===rgmSim.canal?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield"><label>Región</label>
+        <select onchange="rgmSim.region=this.value">${REGIONES.map(o=>`<option ${o===rgmSim.region?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield"><label>Cliente / Distribuidor</label>
+        <select onchange="rgmSim.cliente=this.value">${CLIENTES_SIM.map(o=>`<option ${o===rgmSim.cliente?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield"><label>Cliente Sell-Out (tienda / PDV)</label>
+        <select onchange="rgmSim.clienteSellOut=this.value">${CLIENTES_SELLOUT.map(o=>`<option ${o===rgmSim.clienteSellOut?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield" style="min-width:300px"><label>Grupo de PDVs (opcional — armado en Sell-Through)</label>
+        ${pdvGrupos.length ? `
+          <select onchange="rgmSim.grupoPdvId=this.value||null;renderContent()">
+            <option value="">Sin grupo — usar Cliente Sell-Out</option>
+            ${pdvGrupos.map(g=>`<option value="${g.id}" ${rgmSim.grupoPdvId===g.id?'selected':''}>${g.nombre} (${g.pdvs.length} PDVs)</option>`).join('')}
+          </select>
+        ` : `<button class="btn secondary" style="width:100%" onclick="goToMapaPdvs()">📍 Armar grupo en Mapa de Clientes</button>`}
+      </div>
+      ${grupoSel ? `
+      <div class="simfield" style="flex:1 1 100%">
+        <label>PDVs en "${grupoSel.nombre}"</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${grupoSel.pdvs.map(p=>`<span class="pill blue">${p}</span>`).join('')}
+          <span class="pill gray" style="cursor:pointer" onclick="rgmSim.grupoPdvId=null;renderContent()">Quitar grupo ✕</span>
+        </div>
+      </div>` : ''}
+      <div class="simfield"><label>Período</label>
+        <select onchange="rgmSim.periodo=this.value">${PERIODOS.map(o=>`<option ${o===rgmSim.periodo?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield"><label>Budget del período</label>
+        <input type="number" value="${rgmSim.budget}" onchange="rgmSim.budget=Number(this.value)">
+      </div>
+      <div class="simfield"><label>Precio objetivo (opcional)</label>
+        <input type="number" placeholder="$/kg" value="${rgmSim.precioObj}" onchange="rgmSim.precioObj=this.value">
+      </div>
+      <div class="simfield" style="min-width:280px"><label>Tipo de dinámica</label>
+        ${rgmToggle('tipo', null, RGM_DINAMICAS.map(t=>[t,t]))}
+      </div>
+      <div class="simfield"><label>Objetivo de la dinámica</label>
+        <select onchange="rgmSim.objetivo=this.value">${RGM_OBJETIVOS.map(o=>`<option ${o===rgmSim.objetivo?'selected':''}>${o}</option>`).join('')}</select>
+      </div>
+      <div class="simfield" style="min-width:260px"><label>Mecánica / características</label>
+        <input type="text" value="${rgmSim.caracteristicas}" onchange="rgmSim.caracteristicas=this.value">
+      </div>
+      <div class="simfield" style="min-width:260px"><label>Hipótesis comercial</label>
+        <input type="text" value="${rgmSim.hipotesis}" onchange="rgmSim.hipotesis=this.value">
+      </div>
+      <div class="simfield" style="flex-direction:row;gap:8px;align-items:flex-end">
+        <button class="btn" onclick="runIA()">✨ Sugerir con IA</button>
+        <button class="btn secondary" onclick="openRgmManualForm()">➕ Armar dinámica manualmente</button>
+      </div>
+    </div>
+
+    ${iaResult ? iaResultHtml() : (rgmManualForm ? rgmManualFormHtml() : `<div class="empty-state"><div class="ico">◇</div>Configurá los filtros y elegí cómo seguir: presioná "Sugerir con IA" para que Nexus AI proponga precio, targeting y volumen, o "Armar dinámica manualmente" para cargarla vos mismo directo al seguimiento.</div>`)}
+
+    ${sectionTitle('Seguimiento de dinámicas','Activas, planificadas y finalizadas — armadas manualmente o guardadas desde la IA')}
+    <div class="panel" id="rgmSeguimientoPanel">
+      <table><thead><tr><th>Dinámica</th><th>Cliente / Canal</th><th>Estado</th><th>Volumen vs. objetivo</th><th>ROI</th><th></th></tr></thead>
+      <tbody>
+      ${rgmTracking()}
+      </tbody></table>
+    </div>
+  `;
+}
+function rgmTracking(){
+  const estadoPill = {'En curso':'blue','Planificada':'gray','Finalizada':'green'};
+  return rgmDinamicas.map((r,i)=>`<tr>
+    <td>${r.n}</td>
+    <td>${r.cl}</td>
+    <td>
+      <select onchange="rgmDinamicas[${i}].estado=this.value;renderContent()" style="background:var(--bg-2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:6px;font-size:11.5px">
+        ${['En curso','Planificada','Finalizada'].map(e=>`<option ${e===r.estado?'selected':''}>${e}</option>`).join('')}
+      </select>
+    </td>
+    <td>${r.vsObj?r.vsObj.toFixed(0)+'%':'—'}</td>
+    <td>${r.roi?r.roi.toFixed(1)+'x':'—'}</td>
+    <td><span class="pill red" style="cursor:pointer" onclick="removeRgmDinamica(${i})">Quitar</span></td>
+  </tr>`).join('');
+}
+function addRgmDinamica(source){
+  const grupo = pdvGrupos.find(g=>g.id===rgmSim.grupoPdvId) || null;
+  const clienteLabel = grupo ? `${grupo.nombre} (${grupo.pdvs.length} PDVs)`
+    : (rgmSim.clienteSellOut!==CLIENTES_SELLOUT[0] ? rgmSim.clienteSellOut
+    : (rgmSim.cliente!==CLIENTES_SIM[0] ? rgmSim.cliente : rgmSim.canal));
+  const skuLabel = rgmSim.sku!==SKUS[0] ? ' — '+rgmSim.sku : '';
+  const nombre = `${rgmSim.tipo}${skuLabel}`;
+  if(source==='ia' && iaResult){
+    rgmDinamicas.push({n:nombre, cl:clienteLabel, estado:'Planificada', vsObj:Math.round(100+iaResult.volIncPct), roi:iaResult.roi});
+  } else {
+    rgmDinamicas.push({n:nombre, cl:clienteLabel, estado:'Planificada', vsObj:0, roi:0});
+  }
+  renderContent();
+}
+function removeRgmDinamica(i){
+  rgmDinamicas.splice(i,1);
+  renderContent();
+}
+function openRgmManualForm(){
+  const grupo = pdvGrupos.find(g=>g.id===rgmSim.grupoPdvId) || null;
+  const clienteLabel = grupo ? `${grupo.nombre} (${grupo.pdvs.length} PDVs)`
+    : (rgmSim.clienteSellOut!==CLIENTES_SELLOUT[0] ? rgmSim.clienteSellOut
+    : (rgmSim.cliente!==CLIENTES_SIM[0] ? rgmSim.cliente : rgmSim.canal));
+  const skuLabel = rgmSim.sku!==SKUS[0] ? ' — '+rgmSim.sku : '';
+  rgmManualForm = { nombre: `${rgmSim.tipo}${skuLabel}`, cliente: clienteLabel, estado: 'Planificada', volObjetivoPct: 0, roiEsperado: 1.5 };
+  iaResult = null;
+  renderContent();
+  setTimeout(()=>{ document.getElementById('rgmManualFormPanel')?.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
+}
+function cancelRgmManualForm(){
+  rgmManualForm = null;
+  renderContent();
+}
+function saveRgmManualForm(){
+  if(!rgmManualForm) return;
+  const f = rgmManualForm;
+  rgmDinamicas.push({ n: f.nombre, cl: f.cliente, estado: f.estado, vsObj: f.volObjetivoPct, roi: f.roiEsperado });
+  rgmManualForm = null;
+  renderContent();
+  setTimeout(()=>{ document.getElementById('rgmSeguimientoPanel')?.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
+}
+function rgmManualFormHtml(){
+  const f = rgmManualForm;
+  return `
+  <div class="panel" id="rgmManualFormPanel" style="border:1px solid rgba(139,92,246,.35)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="ico">✍️</div><h3 style="margin:0">Armar dinámica manualmente</h3></div>
+    <div class="panel-sub">Cargá los datos vos mismo y guardala directo en el seguimiento — sin pasar por la sugerencia de IA</div>
+    <div class="simbar" style="margin-top:12px">
+      <div class="simfield" style="min-width:260px"><label>Nombre de la dinámica</label>
+        <input type="text" value="${f.nombre}" onchange="rgmManualForm.nombre=this.value">
+      </div>
+      <div class="simfield" style="min-width:220px"><label>Cliente / Canal</label>
+        <input type="text" value="${f.cliente}" onchange="rgmManualForm.cliente=this.value">
+      </div>
+      <div class="simfield"><label>Estado inicial</label>
+        <select onchange="rgmManualForm.estado=this.value">
+          ${['Planificada','En curso','Finalizada'].map(e=>`<option ${e===f.estado?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+      <div class="simfield"><label>Volumen vs. objetivo (%)</label>
+        <input type="number" value="${f.volObjetivoPct}" onchange="rgmManualForm.volObjetivoPct=Number(this.value)">
+      </div>
+      <div class="simfield"><label>ROI esperado (x)</label>
+        <input type="number" step="0.1" value="${f.roiEsperado}" onchange="rgmManualForm.roiEsperado=Number(this.value)">
+      </div>
+      <div class="simfield" style="flex-direction:row;gap:8px;align-items:flex-end">
+        <button class="btn" onclick="saveRgmManualForm()">💾 Guardar en seguimiento</button>
+        <button class="btn secondary" onclick="cancelRgmManualForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>`;
+}
+function runIA(){
+  const grupo = pdvGrupos.find(g=>g.id===rgmSim.grupoPdvId) || null;
+  const seed = hash(rgmSim.sku+rgmSim.canal+rgmSim.region+rgmSim.cliente+rgmSim.clienteSellOut+(rgmSim.grupoPdvId||'')+rgmSim.periodo+rgmSim.tipo+rgmSim.objetivo);
+  const basePrice = 2350 + (rand01(seed)*400);
+  const discountPct = 8 + rand01(seed*1.7)*7;
+  const precioSugerido = basePrice*(1-discountPct/100);
+  const volumenBase = 42000 + rand01(seed*2.3)*18000;
+  const elasticidad = 1.6 + rand01(seed*3.1)*0.6;
+  const volIncPct = discountPct*elasticidad*0.55;
+  const volumenObjetivo = volumenBase*(1+volIncPct/100);
+  const roi = 1.4 + rand01(seed*4.7)*1.1;
+  const universo = grupo ? grupo.pdvs : ['Cadena Metro','Hiper Andes','Distribuidora Norte','Mayorista Sur','Super Regional','Distribuidora Litoral','Autoservicios GBA Norte','Cadena Regional Sur'];
+  const targeting = universo.map(c=>({c, gap: rand01(hash(seed+c))*100}))
+    .sort((a,b)=>b.gap-a.gap).slice(0,5)
+    .map(t=>({...t, inv: rgmSim.budget * (t.gap/100) / 3}));
+  iaResult = { basePrice, discountPct, precioSugerido, volumenBase, volumenObjetivo, volIncPct, roi, targeting, grupoNombre: grupo?grupo.nombre:null };
+  renderContent();
+}
+function iaResultHtml(){
+  const r = iaResult;
+  const targetLabel = r.grupoNombre ? `el grupo <b>"${r.grupoNombre}"</b>` : `<b>${rgmSim.clienteSellOut}</b>`;
+  return `
+  <div class="ia-card">
+    <div class="ia-head"><div class="ico">✨</div><b>Recomendación de Nexus AI</b><span class="pill pink" style="margin-left:auto">${rgmSim.tipo}</span></div>
+    <div class="nexus-block" style="background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px">
+      <p style="margin:0"><strong>Objetivo:</strong> ${rgmSim.objetivo} · <strong>Mecánica:</strong> ${rgmSim.caracteristicas}</p>
+      <p style="margin:6px 0 0 0"><strong>Hipótesis comercial:</strong> ${rgmSim.hipotesis}</p>
+    </div>
+    <div class="rationale">
+      La IA identificó que en <b>${rgmSim.canal.toLowerCase()}</b> / <b>${rgmSim.region.toLowerCase()}</b>, sobre ${targetLabel}, el ${(30+r.discountPct).toFixed(0)}% de los PDV con distribución activa no alcanza el volumen mínimo de activación. Redireccionar la inversión de "${rgmSim.tipo}" hacia ${r.grupoNombre?'los PDVs listados abajo':'los clientes listados abajo'}, en lugar de aplicarla de forma pareja, proyecta un ROI de <b>${r.roi.toFixed(1)}x</b> (vs. ~0.9x de la dinámica actual). No es solo el diagnóstico: esta es la iniciativa priorizada para ejecutar.
+    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      ${kpiCard('Precio objetivo sugerido', money(r.precioSugerido)+'/kg', -r.discountPct, pctStr(-r.discountPct)+' vs. precio base')}
+      ${kpiCard('Volumen objetivo', num(r.volumenObjetivo,0)+' kg', r.volIncPct, pctStr(r.volIncPct)+' para sostener masa de contribución')}
+      ${kpiCard('Budget asignado', money(rgmSim.budget), 0, 'del período seleccionado')}
+      ${kpiCard('ROI proyectado', r.roi.toFixed(1)+'x', (r.roi-1)*100, 'vs. escenario flat')}
+    </div>
+    <div class="section-title" style="margin-top:20px">Targeting sugerido — ${r.grupoNombre?`dentro del grupo "${r.grupoNombre}"`:'dónde direccionar la inversión'}</div>
+    <table><thead><tr><th>${r.grupoNombre?'PDV':'Cliente / PDV'}</th><th>Gap score</th><th>Inversión sugerida</th></tr></thead>
+    <tbody>${r.targeting.map(t=>`<tr><td>${t.c}</td><td>${t.gap.toFixed(0)}/100</td><td>${money(t.inv)}</td></tr>`).join('')}</tbody></table>
+    <div style="margin-top:16px"><button class="btn" onclick="addRgmDinamica('ia')">💾 Guardar esta dinámica en seguimiento</button></div>
+  </div>`;
+}
+function chartsRGM(){
+  const sctx = fseed()+'ctx';
+  const tasa = monthlySeries(38, sctx+'tasa', .01, .08);
+  const inflGenS = monthlySeries(3.8, sctx+'infg', .01, .15);
+  const inflAliS = monthlySeries(4.6, sctx+'infa', .01, .15);
+  const inflIpimS = monthlySeries(4.2, sctx+'ipim', .01, .18);
+  lineChart('ch-rgm-ctx-tasa', MESES, [{label:'Tasa de interés', data:tasa, borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+  lineChart('ch-rgm-ctx-inflgen', MESES, [{label:'Inflación general', data:inflGenS, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+  lineChart('ch-rgm-ctx-inflali', MESES, [{label:'Inflación alimentos', data:inflAliS, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+  lineChart('ch-rgm-ctx-ipim', MESES, [{label:'Inflación IPIM', data:inflIpimS, borderColor:'#f97316', backgroundColor:'rgba(249,115,22,.1)', tension:.3, pointRadius:2}], {labelFormatter: v=>v.toFixed(1)+'%'});
+
+  if(rgmElastResult){
+    const r = rgmElastResult;
+    lineChart('ch-rgm-elast', r.puntos.map(p=>(p.variacion>0?'+':'')+p.variacion+'%'), [
+      {label:'Volumen (índice)', data:r.puntos.map(p=>p.volIdx), borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.08)', tension:.3, pointRadius:2},
+      {label:'Venta Neta (índice)', data:r.puntos.map(p=>p.ventaIdx), borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,.08)', tension:.3, pointRadius:2},
+      {label:'Margen de Contribución (índice)', data:r.puntos.map(p=>p.margenIdx), borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.08)', tension:.3, pointRadius:2},
+    ], {labelFormatter: v=>v.toFixed(0)});
+  }
+}
+
+/* ============================= INIT ============================= */
+renderNav();
+setView('ventas');
+</script>
+</body>
+</html>
