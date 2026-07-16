@@ -363,7 +363,7 @@ let matrizFiltroNoCompra = [];
 let matrizIdentificado = false;
 let segmentacionCategoria = 'mix';
 let oportSkuTestigos = [PRODUCTOS_MAPA[2].n];
-let oportSkuObjetivo = PRODUCTOS_MAPA[0].n;
+let oportSkuObjetivos = [PRODUCTOS_MAPA[0].n];
 let promoForm = {
   nombre: 'Activación SKU objetivo en zona seleccionada',
   mecanica: 'Precio especial',
@@ -1924,13 +1924,23 @@ function toggleOportSkuTestigo(producto){
   }
   renderContent();
 }
+function toggleOportSkuObjetivo(producto){
+  const idx = oportSkuObjetivos.indexOf(producto);
+  if(idx>=0){
+    if(oportSkuObjetivos.length>1) oportSkuObjetivos.splice(idx,1);
+  } else {
+    oportSkuObjetivos.push(producto);
+  }
+  renderContent();
+}
 function stOportunidadData(){
-  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivo;
+  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
   const pdvsZona = Math.max(1, Math.round(vary(12, s+'z', .3)));
   const factorTestigos = Math.min(0.92, 0.5 + (oportSkuTestigos.length-1)*0.14);
   const compranTestigo = Math.max(0, Math.round(vary(pdvsZona*factorTestigos, s+'ct', .35)));
-  const noCompranObjetivo = Math.max(0, Math.round(vary(pdvsZona*0.28, s+'nco', .35)));
-  const altoPotencial = Math.max(0, Math.round(vary(2, s+'ap', .5)));
+  const factorObjetivos = Math.min(0.85, 0.28 + (oportSkuObjetivos.length-1)*0.16);
+  const noCompranObjetivo = Math.max(0, Math.round(vary(pdvsZona*factorObjetivos, s+'nco', .35)));
+  const altoPotencial = Math.max(0, Math.round(vary(2+(oportSkuObjetivos.length-1), s+'ap', .5)));
   const gapConversion = Math.max(0, noCompranObjetivo - Math.round(vary(1,s+'gc',.6)));
   const oportunidadUsd = vary(72000, s+'op', .35);
   const volumenCajas = Math.round(vary(1601, s+'vc', .35));
@@ -1939,7 +1949,7 @@ function stOportunidadData(){
 }
 function oportunidadTabHtml(){
   const d = stOportunidadData();
-  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivo;
+  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
   const recNames = ['Café Botánico Norte','Café Serrano','Autoservicio Honduras'];
   const recRows = recNames.map((n,i)=>{
     const p = PDVS_MAPA.find(x=>x.n===n);
@@ -1951,7 +1961,7 @@ function oportunidadTabHtml(){
   return `
     <div class="panel">
       <h3>Qué está mirando Nexus</h3>
-      <div class="panel-sub">El SKU testigo marca dónde la categoría ya funciona. El SKU objetivo es el producto que queremos introducir o acelerar en esos mismos PDVs.</div>
+      <div class="panel-sub">El SKU testigo marca dónde la categoría ya funciona — usalo para anclar la mayor cantidad de clientes posible. Los SKU objetivo son los productos que queremos introducir o acelerar en esos mismos PDVs — podés elegir varios a la vez.</div>
       <div style="margin-top:14px">
         <div class="form-field">
           <label>SKU Testigo <span style="font-weight:400;color:var(--text-dim)">— podés elegir más de uno</span></label>
@@ -1959,16 +1969,17 @@ function oportunidadTabHtml(){
             ${PRODUCTOS_MAPA.map(p=>`<span class="pill ${oportSkuTestigos.includes(p.n)?'green':'gray'}" style="cursor:pointer" onclick="toggleOportSkuTestigo('${p.n}')">${oportSkuTestigos.includes(p.n)?'✓ ':''}${p.n}</span>`).join('')}
           </div>
         </div>
-        <div class="form-field" style="max-width:320px;margin-top:14px"><label>SKU Objetivo</label>
-          <select class="form-select" onchange="oportSkuObjetivo=this.value;renderContent()">
-            ${PRODUCTOS_MAPA.map(p=>`<option ${p.n===oportSkuObjetivo?'selected':''}>${p.n}</option>`).join('')}
-          </select>
+        <div class="form-field" style="margin-top:14px">
+          <label>SKU Objetivo <span style="font-weight:400;color:var(--text-dim)">— podés elegir más de uno</span></label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+            ${PRODUCTOS_MAPA.map(p=>`<span class="pill ${oportSkuObjetivos.includes(p.n)?'orange':'gray'}" style="cursor:pointer" onclick="toggleOportSkuObjetivo('${p.n}')">${oportSkuObjetivos.includes(p.n)?'✓ ':''}${p.n}</span>`).join('')}
+          </div>
         </div>
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-top:16px">
         ${kpiCard('PDVs Zona', num(d.pdvsZona,0), 0, 'Universo seleccionado')}
         ${kpiCard('Compran Testigo', num(d.compranTestigo,0), 0, oportSkuTestigos.join(', '))}
-        ${kpiCard('No Compran Objetivo', num(d.noCompranObjetivo,0), 0, oportSkuObjetivo)}
+        ${kpiCard('No Compran Objetivo', num(d.noCompranObjetivo,0), 0, oportSkuObjetivos.join(', '))}
         ${kpiCard('Alto Potencial', num(d.altoPotencial,0), 0, 'Candidatos inmediatos')}
         ${kpiCard('Gap Conversión', num(d.gapConversion,0), 0, 'Compradores a capturar')}
       </div>
@@ -2338,7 +2349,7 @@ function generateNexusResponseMapa(tab,q){
     iniciativas = [`Priorizar activación de ${worst.n} en la zona seleccionada.`, 'Cruzar el listado de No Compradores con el universo de PDVs del canal principal.', 'Fijar un objetivo de DN a 60 días para ese SKU.'];
   } else if(tab==='oportunidad'){
     const d = stOportunidadData();
-    diagnostico = `Con ${oportSkuTestigos.join(' + ')} como testigo${oportSkuTestigos.length>1?'s':''} y ${oportSkuObjetivo} como objetivo, hay ${d.gapConversion} PDVs con conversión pendiente sobre ${d.pdvsZona} en la zona.`;
+    diagnostico = `Con ${oportSkuTestigos.join(' + ')} como testigo${oportSkuTestigos.length>1?'s':''} y ${oportSkuObjetivos.join(' + ')} como objetivo${oportSkuObjetivos.length>1?'s':''}, hay ${d.gapConversion} PDVs con conversión pendiente sobre ${d.pdvsZona} en la zona.`;
     insight = `La oportunidad estimada de ${moneyK(d.oportunidadUsd)} se concentra en pocos PDVs de alto potencial — conviene priorizar antes de escalar a toda la zona.`;
     iniciativas = ['Usar los PDVs recomendados como piloto antes de escalar.', 'Confirmar disponibilidad de stock del SKU objetivo en el distribuidor asignado.', 'Medir conversión a 30 días post-activación.'];
   } else if(tab==='activacion'){
