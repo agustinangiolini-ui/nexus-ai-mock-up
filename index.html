@@ -361,6 +361,7 @@ let pdvGrupoNombreDraft = '';
 let matrizFiltroCompra = [];
 let matrizFiltroNoCompra = [];
 let matrizIdentificado = false;
+let oportunidadIdentificado = false;
 let segmentacionCategoria = 'mix';
 let oportSkuTestigos = [PRODUCTOS_MAPA[2].n];
 let oportSkuObjetivos = [PRODUCTOS_MAPA[0].n];
@@ -1947,17 +1948,33 @@ function stOportunidadData(){
   const pdvsRecomendados = Math.max(1, Math.round(vary(2, s+'pr', .4)));
   return {pdvsZona, compranTestigo, noCompranObjetivo, altoPotencial, gapConversion, oportunidadUsd, volumenCajas, pdvsRecomendados};
 }
+function oportunidadMatch(row){
+  const compraSet = new Set(row.cols.filter(c=>c.compra).map(c=>c.producto));
+  const okTestigo = oportSkuTestigos.some(p=>compraSet.has(p));
+  const okObjetivo = !oportSkuObjetivos.every(p=>compraSet.has(p));
+  return okTestigo && okObjetivo;
+}
+function oportunidadPdvsData(){
+  const s = fseed()+'oportpdv'+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
+  return matrizClienteProductoData().filter(oportunidadMatch).map(row=>{
+    const compraSet = new Set(row.cols.filter(c=>c.compra).map(c=>c.producto));
+    const faltantes = oportSkuObjetivos.filter(p=>!compraSet.has(p));
+    const seed = s+row.pdv;
+    const oport = Math.round(vary(15000+faltantes.length*8000, seed+'op', .35));
+    return {pdv: row.pdv, canal: row.canal, dist: row.dist, faltantes, oport};
+  }).sort((a,b)=>b.oport-a.oport);
+}
+function selectPdvsPorOportunidad(){
+  const data = oportunidadPdvsData();
+  pdvSelected = new Set(data.map(r=>r.pdv));
+  oportunidadIdentificado = true;
+  renderContent();
+}
 function oportunidadTabHtml(){
   const d = stOportunidadData();
-  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
-  const recNames = ['Café Botánico Norte','Café Serrano','Autoservicio Honduras'];
-  const recRows = recNames.map((n,i)=>{
-    const p = PDVS_MAPA.find(x=>x.n===n);
-    const seed = s+n;
-    const oport = vary(30000-i*5000, seed+'op', .3);
-    const mixActual = vary(45-i*7, seed+'mx', .3);
-    return {n, canal:p.canal, dist:p.dist, oport, mixActual};
-  });
+  const oportData = oportunidadPdvsData();
+  const matchCount = oportData.length;
+  const totalOportunidad = oportData.reduce((sum,r)=>sum+r.oport,0);
   return `
     <div class="panel">
       <h3>Qué está mirando Nexus</h3>
@@ -1987,20 +2004,33 @@ function oportunidadTabHtml(){
     <div class="panel" style="border-color:rgba(139,92,246,.35);margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
-          <h3 style="margin:0 0 4px 0">Oportunidad estimada: ${moneyK(d.oportunidadUsd)}</h3>
-          <div class="panel-sub">${d.pdvsRecomendados} PDVs recomendados para activar primero.</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span class="pill blue">Volumen potencial ${num(d.volumenCajas,0)} cajas</span>
-          <button class="btn">Usar PDVs recomendados</button>
+          <h3 style="margin:0 0 4px 0">Oportunidad estimada: ${moneyK(totalOportunidad)}</h3>
+          <div class="panel-sub">${matchCount} PDV${matchCount===1?'':'s'} que compran algún SKU testigo y todavía no completaron los SKU objetivo elegidos.</div>
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn" ${matchCount===0?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="selectPdvsPorOportunidad()">🔍 Identificar clientes (${matchCount})</button>
+        ${oportunidadIdentificado ? `<span class="pill gray" style="cursor:pointer" onclick="pdvSelected=new Set();oportunidadIdentificado=false;renderContent()">Limpiar selección</span>` : ''}
+      </div>
+      ${oportunidadIdentificado ? (matchCount>0
+        ? `<div class="nexus-block" style="margin-top:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:8px 14px"><p style="margin:0">✅ Se tildaron <strong>${matchCount} cliente${matchCount===1?'':'s'}</strong> en la tabla de abajo. Nombrá el grupo y guardalo para usarlo en RGM.</p></div>`
+        : `<div class="nexus-block" style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:8px 14px"><p style="margin:0">⚠️ Ningún cliente cumple esta combinación de SKU testigo/objetivo — probá con otra combinación.</p></div>`
+      ) : ''}
+      <div class="foot-note" style="margin-top:10px">Al identificar, los clientes que cumplen la condición quedan tildados en la tabla de abajo. Nombralos y guardalos como grupo, y después elegí ese grupo en RGM › Simulador de dinámica promocional.</div>
       <div style="overflow-x:auto;margin-top:16px">
-        <table><thead><tr><th>PDV recomendado</th><th>Canal</th><th>Distribuidor</th><th>Oportunidad</th><th>Mix actual</th></tr></thead>
+        <table><thead><tr><th></th><th>PDV</th><th>Canal</th><th>Distribuidor</th><th>SKU objetivo faltantes</th><th>Oportunidad</th></tr></thead>
         <tbody>
-          ${recRows.map(r=>`<tr><td style="font-weight:700">${r.n}</td><td>${r.canal}</td><td>${r.dist}</td><td><span class="pill green">${money(r.oport)}</span></td><td>${r.mixActual.toFixed(0)}%</td></tr>`).join('')}
+          ${oportData.length ? oportData.map(r=>`<tr style="${pdvSelected.has(r.pdv)?'background:rgba(139,92,246,.05)':''}">
+            <td><input type="checkbox" ${pdvSelected.has(r.pdv)?'checked':''} onchange="togglePdvSelected('${r.pdv}')"></td>
+            <td style="font-weight:700">${r.pdv}</td>
+            <td>${r.canal}</td>
+            <td>${r.dist}</td>
+            <td>${r.faltantes.map(f=>`<span class="pill orange" style="margin:1px 3px 1px 0;display:inline-block">${f}</span>`).join('')||'—'}</td>
+            <td><span class="pill green">${money(r.oport)}</span></td>
+          </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">Ningún PDV cumple la combinación de SKU testigo/objetivo elegida arriba.</td></tr>`}
         </tbody></table>
       </div>
+      ${pdvGrupoGuardarHtml()}
     </div>
   `;
 }
@@ -3565,12 +3595,17 @@ function runIA(){
   iaResult = { basePrice, discountPct, precioSugerido, volumenBase, volumenObjetivo, volIncPct, roi, targeting, grupoNombre: grupo?grupo.nombre:null };
   renderContent();
 }
+function clearRgmSimulator(){
+  iaResult = null;
+  rgmManualForm = null;
+  renderContent();
+}
 function iaResultHtml(){
   const r = iaResult;
   const targetLabel = r.grupoNombre ? `el grupo <b>"${r.grupoNombre}"</b>` : `<b>${rgmSim.clienteSellOut}</b>`;
   return `
   <div class="ia-card">
-    <div class="ia-head"><div class="ico">✨</div><b>Recomendación de Nexus AI</b><span class="pill pink" style="margin-left:auto">${rgmSim.tipo}</span></div>
+    <div class="ia-head"><div class="ico">✨</div><b>Recomendación de Nexus AI</b><span class="pill pink" style="margin-left:auto">${rgmSim.tipo}</span><span class="pill gray" style="cursor:pointer;margin-left:8px" onclick="clearRgmSimulator()" title="Descartar esta recomendación y armar otra desde cero — lo que ya guardaste en Seguimiento no se toca">✕ Limpiar</span></div>
     <div class="nexus-block" style="background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px">
       <p style="margin:0"><strong>Objetivo:</strong> ${rgmSim.objetivo} · <strong>Mecánica:</strong> ${rgmSim.caracteristicas}</p>
       <p style="margin:6px 0 0 0"><strong>Hipótesis comercial:</strong> ${rgmSim.hipotesis}</p>
@@ -3587,7 +3622,10 @@ function iaResultHtml(){
     <div class="section-title" style="margin-top:20px">Targeting sugerido — ${r.grupoNombre?`dentro del grupo "${r.grupoNombre}"`:'dónde direccionar la inversión'}</div>
     <table><thead><tr><th>${r.grupoNombre?'PDV':'Cliente / PDV'}</th><th>Gap score</th><th>Inversión sugerida</th></tr></thead>
     <tbody>${r.targeting.map(t=>`<tr><td>${t.c}</td><td>${t.gap.toFixed(0)}/100</td><td>${money(t.inv)}</td></tr>`).join('')}</tbody></table>
-    <div style="margin-top:16px"><button class="btn" onclick="addRgmDinamica('ia')">💾 Guardar esta dinámica en seguimiento</button></div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" onclick="addRgmDinamica('ia')">💾 Guardar esta dinámica en seguimiento</button>
+      <button class="btn secondary" onclick="clearRgmSimulator()">✕ Limpiar y armar otra</button>
+    </div>
   </div>`;
 }
 function chartsRGM(){
