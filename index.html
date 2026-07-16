@@ -295,6 +295,7 @@ const VERTICALS = [
 const PERIODOS = ['Jul 2026 (MTD)','Jun 2026','Q2 2026','FY2026','Presupuesto'];
 const CANALES  = ['Todos los canales','Moderno','Tradicional','E-commerce','Mayorista','On Premise'];
 const REGIONES = ['Todas las regiones','CABA','GBA Norte','GBA Sur','Interior'];
+const PROVINCIAS = ['Todas las provincias','Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'];
 const SKUS     = ['Todos los SKU','Producto A 500g','Producto A 1kg','Producto B Pack x6','Producto C Premium','Producto D Económico'];
 const CLIENTES_SIM = ['Toda la cartera','Cadena Metro','Hiper Andes','Distribuidora Norte','Mayorista Sur','Super Regional'];
 const CLIENTES    = ['Todos los clientes','Cadena Metro','Hiper Andes','Distribuidora Norte','Mayorista Sur','Super Regional','Distribuidora Litoral'];
@@ -337,7 +338,7 @@ function monthlySeries(base, seedBase, trend, spread){
   return MESES.map((m,i)=> vary(base*(1+(i-6)*trend), seedBase+m, spread));
 }
 
-let filters = { periodo: PERIODOS[0], canal: CANALES[0], region: REGIONES[0], cliente: CLIENTES[0], categoria: CATEGORIAS[0], segmento: SEGMENTOS[0], producto: PRODUCTOS[0], um: UNIDADES[0], vendedor: VENDEDORES[0], distribuidor: DISTRIBUIDORES[0] };
+let filters = { periodo: PERIODOS[0], canal: CANALES[0], region: REGIONES[0], provincia: PROVINCIAS[0], cliente: CLIENTES[0], categoria: CATEGORIAS[0], segmento: SEGMENTOS[0], producto: PRODUCTOS[0], um: UNIDADES[0], vendedor: VENDEDORES[0], distribuidor: DISTRIBUIDORES[0] };
 let current = 'ventas';
 let sellthroughTab = 'sellout';
 let rankingDim = 'cliente';
@@ -506,6 +507,7 @@ function ventasFilterBarHtml(){
     ${sel('Unidad de medida', filters.um, UNIDADES, 'um')}
     ${sel('Canal', filters.canal, CANALES, 'canal')}
     ${sel('Región', filters.region, REGIONES, 'region')}
+    ${sel('Provincia', filters.provincia, PROVINCIAS, 'provincia')}
     ${sel('Cliente', filters.cliente, CLIENTES, 'cliente')}
     ${sel('Categoría', filters.categoria, CATEGORIAS, 'categoria')}
     ${sel('Segmento', filters.segmento, SEGMENTOS, 'segmento')}
@@ -1022,6 +1024,7 @@ function stFilterBarHtml(){
     ${sel('Unidad de medida', filters.um, UNIDADES, 'um')}
     ${sel('Canal', filters.canal, CANALES, 'canal')}
     ${sel('Región', filters.region, REGIONES, 'region')}
+    ${sel('Provincia', filters.provincia, PROVINCIAS, 'provincia')}
     ${sel('Cliente', filters.cliente, CLIENTES, 'cliente')}
     ${sel('Categoría', filters.categoria, CATEGORIAS, 'categoria')}
     ${sel('Segmento', filters.segmento, SEGMENTOS, 'segmento')}
@@ -1788,35 +1791,16 @@ function pdvGrupoGuardarHtml(){
 function pdvsTabHtml(){
   const rows = pdvsRankingData();
   const estadoPill = {Comprador:'green', Potencial:'orange', 'No comprador':'red'};
-  const canales = [...new Set(PDVS_MAPA.map(p=>p.canal))];
-  const allChecked = rows.length>0 && rows.every(r=>pdvSelected.has(r.pdv));
-  const sugeridos = rows.filter(r=>r.recomendado);
-  const motivoTipos = Object.keys(PDV_MOTIVO_META).map(tipo=>({tipo, ...PDV_MOTIVO_META[tipo], count: rows.filter(r=>r.tipo===tipo).length}));
   return `
     <div class="panel" style="margin-bottom:14px">
-      <h3>Armar grupo de PDVs</h3>
-      <div class="panel-sub">Seleccioná PDVs (autoservicios, almacenes, supermercados, etc.) y guardalos como grupo para direccionar dinámicas promocionales en RGM</div>
-      <div class="nexus-block" style="margin-top:12px;background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 14px">
-        <p style="margin:0"><strong>🎯 ${sugeridos.length} PDV${sugeridos.length===1?'':'s'} sugerido${sugeridos.length===1?'':'s'} para una dinámica:</strong> ordenamos la tabla por prioridad — primero los que no compran el producto, después potenciales sin activar, y por último compradores con volumen debajo del promedio del canal. Usá los botones de abajo para seleccionar cada grupo de oportunidad de un click, sin tildar uno por uno.</p>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px">
-        <span style="font-size:11.5px;color:var(--text-dim)">Por tipo de oportunidad:</span>
-        <span class="pill pink" style="cursor:pointer" onclick="selectPdvsPorMotivo(null)">🎯 Todos los sugeridos (${sugeridos.length})</span>
-        ${motivoTipos.filter(m=>m.count>0).map(m=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorMotivo('${m.tipo}')">${m.icon} ${m.label} (${m.count})</span>`).join('')}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">
-        <span style="font-size:11.5px;color:var(--text-dim)">Por canal:</span>
-        ${canales.map(c=>`<span class="pill blue" style="cursor:pointer" onclick="selectPdvsByCanal('${c}')">${c}</span>`).join('')}
-        <span class="pill gray" style="cursor:pointer" onclick="selectPdvsByCanal(null)">Ninguno</span>
-      </div>
-      ${pdvGrupoGuardarHtml()}
+      <h3>Ranking de PDVs</h3>
+      <div class="panel-sub">Prioridad por oportunidad: primero los que no compran el producto, después potenciales sin activar, y por último compradores con volumen debajo del promedio del canal. Para armar grupos de clientes accionables, usá las pestañas Matriz Cliente × Producto o Segmentación de clientes.</div>
     </div>
     <div style="overflow-x:auto">
     <table>
-      <thead><tr><th><input type="checkbox" ${allChecked?'checked':''} onchange="toggleAllPdvSelected()"></th><th>PDV</th><th>Canal</th><th>Distribuidor</th><th>Estado</th><th>Facturación</th><th>Volumen</th><th>SKUs</th><th>Última Compra</th><th>GAP</th><th>Sugerido</th></tr></thead>
+      <thead><tr><th>PDV</th><th>Canal</th><th>Distribuidor</th><th>Estado</th><th>Facturación</th><th>Volumen</th><th>SKUs</th><th>Última Compra</th><th>GAP</th><th>Sugerido</th></tr></thead>
       <tbody>
       ${rows.map(r=>`<tr style="${r.recomendado?'background:rgba(139,92,246,.05)':''}">
-        <td><input type="checkbox" ${pdvSelected.has(r.pdv)?'checked':''} onchange="togglePdvSelected('${r.pdv}')"></td>
         <td>${r.pdv}</td>
         <td>${r.canal}</td>
         <td>${r.dist}</td>
@@ -1872,7 +1856,7 @@ function useGrupoInRgm(id){
   setTimeout(()=>{ document.querySelector('.simbar')?.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
 }
 function goToMapaPdvs(){
-  sellthroughTab = 'mapa'; mapaAnalysisTab = 'pdvs';
+  sellthroughTab = 'mapa'; mapaAnalysisTab = 'segmentacion';
   setView('sellthrough');
 }
 function stMixData(){
