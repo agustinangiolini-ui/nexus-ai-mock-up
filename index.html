@@ -355,6 +355,7 @@ let mapZones = [];
 let drawingZone = false;
 let currentZonePoints = [];
 let mapaAnalysisTab = 'pdvs';
+let mapaFuente = 'sellout';
 let pdvSelected = new Set();
 let pdvGrupos = [];
 let pdvGrupoNombreDraft = '';
@@ -1728,7 +1729,7 @@ function removeZone(i){
   renderContent();
 }
 function pdvsRankingData(){
-  const s = fseed()+'pdvtable';
+  const s = fseed()+'pdvtable'+mapaFuente;
   const estados = ['Comprador','Potencial','No comprador'];
   const rows = PDVS_MAPA.map((p,i)=>{
     const seed = s+p.n;
@@ -1856,7 +1857,7 @@ function goToMapaPdvs(){
   setView('sellthrough');
 }
 function stMixData(){
-  const s = fseed()+'mapmix';
+  const s = fseed()+'mapmix'+mapaFuente;
   return PRODUCTOS_MAPA.map(p=>{
     const seed = s+p.n;
     const compradores = Math.round(vary(300,seed+'c',.4));
@@ -1935,7 +1936,7 @@ function toggleOportSkuObjetivo(producto){
   renderContent();
 }
 function stOportunidadData(){
-  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
+  const s = fseed()+'mapopor'+mapaFuente+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
   const pdvsZona = Math.max(1, Math.round(vary(12, s+'z', .3)));
   const factorTestigos = Math.min(0.92, 0.5 + (oportSkuTestigos.length-1)*0.14);
   const compranTestigo = Math.max(0, Math.round(vary(pdvsZona*factorTestigos, s+'ct', .35)));
@@ -1955,7 +1956,7 @@ function oportunidadMatch(row){
   return okTestigo && okObjetivo;
 }
 function oportunidadPdvsData(){
-  const s = fseed()+'oportpdv'+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
+  const s = fseed()+'oportpdv'+mapaFuente+oportSkuTestigos.join('+')+oportSkuObjetivos.join('+');
   return matrizClienteProductoData().filter(oportunidadMatch).map(row=>{
     const compraSet = new Set(row.cols.filter(c=>c.compra).map(c=>c.producto));
     const faltantes = oportSkuObjetivos.filter(p=>!compraSet.has(p));
@@ -2144,7 +2145,7 @@ function activacionTabHtml(){
   `;
 }
 function matrizClienteProductoData(){
-  const s = fseed()+'matriz';
+  const s = fseed()+'matriz'+mapaFuente;
   return PDVS_MAPA.map(p=>{
     const cols = PRODUCTOS_MAPA.map(prod=>{
       const seed = s+p.n+prod.n;
@@ -2234,7 +2235,7 @@ function matrizTabHtml(){
 }
 /* ---------- Segmentación avanzada de clientes (amplitud de mix + comportamiento en el tiempo) ---------- */
 function segmentacionData(){
-  const s = fseed()+'segm';
+  const s = fseed()+'segm'+mapaFuente;
   const matriz = matrizClienteProductoData();
   const totalProductos = PRODUCTOS_MAPA.length;
   return PDVS_MAPA.map(p=>{
@@ -2527,9 +2528,13 @@ function stMapa(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px">
         <div>
           <h3 style="margin:0 0 4px 0">Análisis accionable de la selección</h3>
-          <div class="panel-sub">Los KPIs de esta zona se pueden llevar a proyecto como objetivos medibles.</div>
+          <div class="panel-sub">Los KPIs de esta zona se pueden llevar a proyecto como objetivos medibles. Trabajando sobre datos de ${mapaFuente==='sellin'?'Sell-In (despacho a distribuidor/cadena)':'Sell-Out (venta real del distribuidor/cadena al consumidor)'}.</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div class="toggle-group">
+            <div class="toggle-opt ${mapaFuente==='sellout'?'active':''}" onclick="mapaFuente='sellout';renderContent()">Sell-Out</div>
+            <div class="toggle-opt ${mapaFuente==='sellin'?'active':''}" onclick="mapaFuente='sellin';renderContent()">Sell-In</div>
+          </div>
           <button class="btn secondary">◎ Crear proyecto y objetivos</button>
           <button class="btn secondary">⬇ Exportar reporte</button>
           <button class="btn" onclick="document.getElementById('nexusMapaChatInput')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('nexusMapaChatInput')?.focus();">✨ Preguntarle a Nexus →</button>
