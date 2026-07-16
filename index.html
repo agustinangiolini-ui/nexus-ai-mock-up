@@ -2407,7 +2407,7 @@ function mapaAnalysisBody(){
   else if(mapaAnalysisTab==='oportunidad') body = oportunidadTabHtml();
   else if(mapaAnalysisTab==='matriz') body = matrizTabHtml();
   else if(mapaAnalysisTab==='segmentacion') body = segmentacionTabHtml();
-  else body = activacionTabHtml();
+  else body = pdvsTabHtml();
   return body + nexusChatPanelHtmlMapa();
 }
 function stMapa(){
@@ -2502,7 +2502,6 @@ function stMapa(){
         <div class="chip ${mapaAnalysisTab==='pdvs'?'active-chip':''}" onclick="mapaAnalysisTab='pdvs';renderContent()">PDVs y ranking</div>
         <div class="chip ${mapaAnalysisTab==='mix'?'active-chip':''}" onclick="mapaAnalysisTab='mix';renderContent()">Productos y mix</div>
         <div class="chip ${mapaAnalysisTab==='oportunidad'?'active-chip':''}" onclick="mapaAnalysisTab='oportunidad';renderContent()">Oportunidad SKU</div>
-        <div class="chip ${mapaAnalysisTab==='activacion'?'active-chip':''}" onclick="mapaAnalysisTab='activacion';renderContent()">Activación y seguimiento</div>
         <div class="chip ${mapaAnalysisTab==='matriz'?'active-chip':''}" onclick="mapaAnalysisTab='matriz';renderContent()">Matriz Cliente × Producto</div>
         <div class="chip ${mapaAnalysisTab==='segmentacion'?'active-chip':''}" onclick="mapaAnalysisTab='segmentacion';renderContent()">Segmentación de clientes</div>
       </div>
@@ -3404,13 +3403,12 @@ function viewRGM(){
 
     ${iaResult ? iaResultHtml() : (rgmManualForm ? rgmManualFormHtml() : `<div class="empty-state"><div class="ico">◇</div>Configurá los filtros y elegí cómo seguir: presioná "Sugerir con IA" para que Nexus AI proponga precio, targeting y volumen, o "Armar dinámica manualmente" para cargarla vos mismo directo al seguimiento.</div>`)}
 
-    ${sectionTitle('Seguimiento de dinámicas','Activas, planificadas y finalizadas — armadas manualmente o guardadas desde la IA')}
-    <div class="panel" id="rgmSeguimientoPanel">
-      <table><thead><tr><th>Dinámica</th><th>Cliente / Canal</th><th>Estado</th><th>Volumen vs. objetivo</th><th>ROI</th><th></th></tr></thead>
-      <tbody>
-      ${rgmTracking()}
-      </tbody></table>
+    ${sectionTitle('Seguimiento de promociones','Plan vs. real — activas, planificadas y finalizadas')}
+    <div class="panel">
+      <h3>Cómo leer esta sección</h3>
+      <div class="panel-sub">Cada tarjeta mezcla plan vs real. El plan viene de la dinámica diseñada en el Simulador de dinámica promocional de arriba. El real se simula desde las fuentes demo de ventas PDV/SKU, cobertura por zona y ejecución trade.</div>
     </div>
+    ${seguimientoPromosData().map(promoCardHtml).join('')}
   `;
 }
 function rgmTracking(){
