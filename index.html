@@ -357,6 +357,8 @@ let mapaAnalysisTab = 'pdvs';
 let pdvSelected = new Set();
 let pdvGrupos = [];
 let pdvGrupoNombreDraft = '';
+let matrizFiltroCompra = [];
+let matrizFiltroNoCompra = [];
 let oportSkuTestigo = PRODUCTOS_MAPA[2].n;
 let oportSkuObjetivo = PRODUCTOS_MAPA[0].n;
 let promoForm = {
@@ -370,12 +372,20 @@ let promoForm = {
   margenObjetivo: 34,
   hipotesis: 'Convertir PDVs que ya compran el SKU testigo con una oferta acotada, cuidando margen.',
 };
-let mapaChatMessages = { pdvs: [], mix: [], oportunidad: [], activacion: [] };
+let mapaChatMessages = { pdvs: [], mix: [], oportunidad: [], activacion: [], matriz: [] };
 const MAPA_CHAT_SUGGESTIONS = {
   pdvs: ['¿Qué PDVs tienen mayor GAP de oportunidad?', '¿Qué distribuidor tiene más PDVs sin activar?', '¿Qué canal tiene menor cobertura?'],
   mix: ['¿Qué SKU está más lejos del mix objetivo?', '¿Qué productos tienen mejor tendencia?', '¿Dónde conviene reforzar distribución numérica?'],
   oportunidad: ['¿Cuál es la oportunidad total de la zona?', '¿Qué PDV conviene activar primero?', '¿Cuánto volumen podemos capturar este mes?'],
   activacion: ['¿Cómo viene el ROI de la promo activa?', '¿Qué promo está más desviada del plan?', '¿Conviene extender la duración de la promo?'],
+  matriz: ['¿Qué grupo de clientes conviene armar para cross-selling?', '¿Qué producto tiene más compradores exclusivos?', '¿Qué combinación de compra es más común?'],
+};
+let stChatMessages = { sellin: [], sellout: [], mercado: [], contexto: [] };
+const ST_CHAT_SUGGESTIONS = {
+  sellin: ['¿Cómo viene el volumen vs. el período filtrado?', '¿Qué cliente explica la mayor variación?', '¿Cómo está la deuda vencida?'],
+  sellout: ['¿Cómo viene la venta neta reportada por los distribuidores?', '¿Hay brecha relevante entre sell-in y sell-out?', '¿Qué canal crece más en sell-out?'],
+  mercado: ['¿Cómo viene nuestro share vs. la competencia?', '¿Qué tan cerca estamos del price index de paridad?', '¿Cómo evolucionó la distribución numérica?'],
+  contexto: ['¿Cómo impacta la inflación en nuestros insumos?', '¿Qué tan alineados estamos a la inflación general?', '¿Cómo uso esto en el simulador de precio de RGM?'],
 };
 let rgmSim = {
   sku: SKUS[0], canal: CANALES[0], region: REGIONES[0], cliente: CLIENTES_SIM[0], clienteSellOut: CLIENTES_SELLOUT[0],
@@ -1025,6 +1035,63 @@ function viewSellThrough(){
   else if(sellthroughTab==='mapa') body = stMapa();
   return stFilterBarHtml() + sellThroughTabsHtml() + body;
 }
+function askNexusST(q){
+  q = (q||'').trim();
+  if(!q) return;
+  const tab = sellthroughTab;
+  if(!stChatMessages[tab]) return;
+  stChatMessages[tab].push({role:'user', text:q});
+  stChatMessages[tab].push({role:'ai', html: generateNexusResponseST(tab,q)});
+  renderContent();
+}
+function generateNexusResponseST(tab,q){
+  let diagnostico, insight, iniciativas;
+  if(tab==='sellin'){
+    const k = ventasKpis();
+    diagnostico = `Sell-In viene con Venta Neta de ${moneyK(k.ventaNeta)} (${pctStr(k.dVenta)} vs. período filtrado) y ${num(k.clientes)} clientes compradores.`;
+    insight = 'Es la misma fuente que Ventas (ERP) — cualquier desvío acá se refleja igual en la vista de Ventas.';
+    iniciativas = ['Cruzar con el ranking de clientes para ver dónde se concentra la variación.', 'Revisar Días de Pago si la Venta Neta viene creciendo por encima de la cobranza.', 'Comparar contra Sell-Out para ver si hay sobre-stockeo en el canal.'];
+  } else if(tab==='sellout'){
+    const so = sellOutSeries();
+    diagnostico = `Sell-Out reportado por distribuidores/cadenas: Venta Neta de ${moneyK(so.ventaNeta)} (${pctStr(so.dVenta)} vs. período filtrado), con Mix de ${so.mix.toFixed(1)}%.`;
+    insight = 'Si el Sell-Out crece menos que el Sell-In, el stock se está acumulando en el canal — vale la pena mirar la Rotación SO/SI en RGM.';
+    iniciativas = ['Comparar la brecha Sell-In vs. Sell-Out del panel de arriba.', 'Si hay sobre-stockeo, frenar despachos al distribuidor con mayor brecha.', 'Usar el Ranking de RGM para ver qué cliente concentra el desvío.'];
+  } else if(tab==='mercado'){
+    diagnostico = 'El panel de mercado (Nielsen/Scentia) muestra Vol Share, Val Share y Price Index propios vs. la competencia y marca propia del retail.';
+    insight = 'Si el Price Index está por encima de 100 y el Val Share cae, probablemente el precio está espantando volumen — vale la pena cruzarlo con el Simulador de Elasticidad de RGM.';
+    iniciativas = ['Revisar el Price Index vs. el competidor líder.', 'Si la Distribución Ponderada baja, priorizar los PDVs grandes primero.', 'Llevar el Price Index actual al Simulador de Precio de RGM para validar margen.'];
+  } else {
+    diagnostico = 'El Contexto Macro muestra inflación general, de categoría (Alimentos) y el índice de canasta propia (insumos clave).';
+    insight = 'El índice de canasta propia es el insumo directo del Simulador de Precio en RGM — si sube más rápido que la inflación general, hay presión de margen aunque el precio de venta acompañe la inflación.';
+    iniciativas = ['Llevar la inflación del período al Simulador de Precio de RGM.', 'Comparar el índice de canasta propia contra el IPIM mayorista.', 'Si la brecha es grande, evaluar ajuste de precio antes del próximo cierre de mes.'];
+  }
+  return `
+    <div class="nexus-block"><span class="nb-tag">📊 Diagnóstico</span><p>${diagnostico}</p></div>
+    <div class="nexus-block"><span class="nb-tag">💡 Insight</span><p>${insight}</p></div>
+    <div class="nexus-block"><span class="nb-tag">🚀 Iniciativas</span><ul>${iniciativas.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+  `;
+}
+function nexusChatPanelHtmlST(){
+  const tab = sellthroughTab;
+  const suggestions = ST_CHAT_SUGGESTIONS[tab] || [];
+  const msgs = stChatMessages[tab] || [];
+  return `
+  <div class="panel" style="margin-bottom:20px;border-color:rgba(139,92,246,.35)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b3bd6);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0">✨</div>
+      <h3 style="margin:0">Preguntale a Nexus AI</h3>
+    </div>
+    <div class="panel-sub" style="margin-bottom:14px">Preguntá en lenguaje natural sobre esta pestaña. Nexus AI no solo diagnostica: te dice qué hacer.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      ${suggestions.map((q,i)=>`<div class="chip" onclick="askNexusST(ST_CHAT_SUGGESTIONS['${tab}'][${i}])">${q}</div>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <input id="nexusSTChatInput" type="text" placeholder="Preguntá en lenguaje natural..." onkeydown="if(event.key==='Enter'){askNexusST(this.value);this.value='';}">
+      <button class="btn" onclick="const el=document.getElementById('nexusSTChatInput');askNexusST(el.value);el.value='';">Preguntar →</button>
+    </div>
+    ${msgs.length ? `<div class="chat-thread">${msgs.map(renderChatMessage).join('')}</div>` : ''}
+  </div>`;
+}
 
 /* ---------- combinadores Sell-In (SI) + Sell-Out (SO) ---------- */
 function rankingRowsSellOut(){
@@ -1115,6 +1182,7 @@ function stSellOut(){
   const dimMeta = rankingDimMeta();
 
   return `
+    ${nexusChatPanelHtmlST()}
     ${sectionTitle('KPIs de Sell-Out','Cadenas / Distribuidores — mismos KPIs que Ventas')}
     <div class="kpi-grid">
       ${kpiCardClean('Volumen', so.volumenFmt, so.dVol)}
@@ -1245,6 +1313,7 @@ function stSellIn(){
   const dpRows = agingRows(k.ventaNeta*0.14, 'dp');
   const dvRows = agingRows(k.deudaVencida, 'dv');
   return `
+    ${nexusChatPanelHtmlST()}
     ${sectionTitle('KPIs de Sell-In','Idéntico al pilar Ventas — misma fuente ERP')}
     <div class="kpi-grid">
       ${kpiCardClean('Volumen', k.volumenFmt, k.dVol)}
@@ -1470,6 +1539,7 @@ function stMercado(){
   }
 
   return `
+    ${nexusChatPanelHtmlST()}
     ${sectionTitle('Información de mercado','Fuente: Nielsen / Scentia')}
     <div class="kpi-grid">
       ${kpiCard('Volumen', num(empresa.volumen*um.volFactor,um.dec)+' '+um.suf, 2.4, pctStr(2.4)+' vs. LY')}
@@ -1552,6 +1622,7 @@ function stContexto(){
   ];
   const indicePct = ingredientes.reduce((a,i)=>a+i.pct,0)/ingredientes.length;
   return `
+    ${nexusChatPanelHtmlST()}
     ${sectionTitle('Contexto macro','Inflación general y de categoría')}
     <div class="kpi-grid">
       ${kpiCard('Inflación general', inflGen.toFixed(1)+'%', inflGen, 'mensual')}
@@ -1682,6 +1753,29 @@ const PDV_MOTIVO_META = {
   potencial:    {label:'Potenciales sin activar', icon:'🌱'},
   bajo_volumen: {label:'Venden por debajo del promedio', icon:'📉'},
 };
+function pdvGrupoGuardarHtml(){
+  return `
+    <div class="simbar" style="margin-top:12px">
+      <div class="simfield" style="min-width:220px"><label>Nombre del grupo</label>
+        <input type="text" placeholder="Ej: Almacenes GBA Norte" value="${pdvGrupoNombreDraft}" onchange="pdvGrupoNombreDraft=this.value">
+      </div>
+      <div class="simfield" style="flex-direction:row;gap:8px;align-items:flex-end">
+        <button class="btn" ${pdvSelected.size===0?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="savePdvGrupo()">💾 Guardar grupo (${pdvSelected.size} PDV${pdvSelected.size===1?'':'s'})</button>
+      </div>
+    </div>
+    ${pdvGrupos.length ? `
+    <div style="margin-top:14px">
+      <div class="panel-sub" style="margin-bottom:6px">Grupos guardados</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${pdvGrupos.map(g=>`<span class="pill pink" style="display:inline-flex;align-items:center;gap:6px">
+          ${g.nombre} (${g.pdvs.length})
+          <a style="color:inherit;text-decoration:underline;cursor:pointer" onclick="useGrupoInRgm('${g.id}')">usar en RGM</a>
+          <span style="cursor:pointer" onclick="removePdvGrupo('${g.id}')">✕</span>
+        </span>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
 function pdvsTabHtml(){
   const rows = pdvsRankingData();
   const estadoPill = {Comprador:'green', Potencial:'orange', 'No comprador':'red'};
@@ -1706,25 +1800,7 @@ function pdvsTabHtml(){
         ${canales.map(c=>`<span class="pill blue" style="cursor:pointer" onclick="selectPdvsByCanal('${c}')">${c}</span>`).join('')}
         <span class="pill gray" style="cursor:pointer" onclick="selectPdvsByCanal(null)">Ninguno</span>
       </div>
-      <div class="simbar" style="margin-top:12px">
-        <div class="simfield" style="min-width:220px"><label>Nombre del grupo</label>
-          <input type="text" placeholder="Ej: Almacenes GBA Norte" value="${pdvGrupoNombreDraft}" onchange="pdvGrupoNombreDraft=this.value">
-        </div>
-        <div class="simfield" style="flex-direction:row;gap:8px;align-items:flex-end">
-          <button class="btn" ${pdvSelected.size===0?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="savePdvGrupo()">💾 Guardar grupo (${pdvSelected.size} PDV${pdvSelected.size===1?'':'s'})</button>
-        </div>
-      </div>
-      ${pdvGrupos.length ? `
-      <div style="margin-top:14px">
-        <div class="panel-sub" style="margin-bottom:6px">Grupos guardados</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">
-          ${pdvGrupos.map(g=>`<span class="pill pink" style="display:inline-flex;align-items:center;gap:6px">
-            ${g.nombre} (${g.pdvs.length})
-            <a style="color:inherit;text-decoration:underline;cursor:pointer" onclick="useGrupoInRgm('${g.id}')">usar en RGM</a>
-            <span style="cursor:pointer" onclick="removePdvGrupo('${g.id}')">✕</span>
-          </span>`).join('')}
-        </div>
-      </div>` : ''}
+      ${pdvGrupoGuardarHtml()}
     </div>
     <div style="overflow-x:auto">
     <table>
@@ -2021,6 +2097,82 @@ function activacionTabHtml(){
     ${seguimientoPromosData().map(promoCardHtml).join('')}
   `;
 }
+function matrizClienteProductoData(){
+  const s = fseed()+'matriz';
+  return PDVS_MAPA.map(p=>{
+    const cols = PRODUCTOS_MAPA.map(prod=>{
+      const seed = s+p.n+prod.n;
+      const compra = rand01(hash(seed+'c')) > 0.42;
+      const vol = compra ? Math.round(vary(140, seed+'v', .5)) : 0;
+      return { producto: prod.n, compra, vol };
+    });
+    return { pdv: p.n, canal: p.canal, dist: p.dist, cols };
+  });
+}
+function matrizMatch(row){
+  const compraSet = new Set(row.cols.filter(c=>c.compra).map(c=>c.producto));
+  const okCompra = matrizFiltroCompra.every(p=>compraSet.has(p));
+  const okNoCompra = matrizFiltroNoCompra.every(p=>!compraSet.has(p));
+  return okCompra && okNoCompra;
+}
+function matrizMatchCount(data){
+  if(matrizFiltroCompra.length===0 && matrizFiltroNoCompra.length===0) return 0;
+  return data.filter(matrizMatch).length;
+}
+function toggleMatrizFiltro(tipo, producto){
+  const arr = tipo==='compra' ? matrizFiltroCompra : matrizFiltroNoCompra;
+  const idx = arr.indexOf(producto);
+  if(idx>=0) arr.splice(idx,1); else arr.push(producto);
+  renderContent();
+}
+function selectPdvsPorCompra(){
+  const data = matrizClienteProductoData();
+  pdvSelected = new Set(data.filter(matrizMatch).map(r=>r.pdv));
+  renderContent();
+}
+function matrizTabHtml(){
+  const data = matrizClienteProductoData();
+  const matchCount = matrizMatchCount(data);
+  const hayFiltro = matrizFiltroCompra.length>0 || matrizFiltroNoCompra.length>0;
+  return `
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Identificar clientes para cross-selling</h3>
+      <div class="panel-sub">Elegí qué productos compraron y cuáles no, para armar el grupo ideal de una dinámica de cross-selling — ese grupo va a estar disponible directo en el simulador de RGM.</div>
+      <div style="margin-top:12px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Compró:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${PRODUCTOS_MAPA.map(p=>`<span class="pill ${matrizFiltroCompra.includes(p.n)?'green':'gray'}" style="cursor:pointer" onclick="toggleMatrizFiltro('compra','${p.n}')">${matrizFiltroCompra.includes(p.n)?'✓ ':''}${p.n}</span>`).join('')}
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">No compró:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${PRODUCTOS_MAPA.map(p=>`<span class="pill ${matrizFiltroNoCompra.includes(p.n)?'red':'gray'}" style="cursor:pointer" onclick="toggleMatrizFiltro('nocompra','${p.n}')">${matrizFiltroNoCompra.includes(p.n)?'✕ ':''}${p.n}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn" ${!hayFiltro?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="selectPdvsPorCompra()">🔍 Identificar clientes (${matchCount})</button>
+        ${hayFiltro ? `<span class="pill gray" style="cursor:pointer" onclick="matrizFiltroCompra=[];matrizFiltroNoCompra=[];renderContent()">Limpiar filtros</span>` : ''}
+      </div>
+      <div class="foot-note" style="margin-top:10px">Al identificar, los clientes que cumplen la condición quedan tildados en la tabla de abajo. Nombralos y guardalos como grupo, y después elegí ese grupo en RGM › Simulador de dinámica promocional para direccionar la promo solo a ellos.</div>
+      ${pdvGrupoGuardarHtml()}
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th><input type="checkbox" onchange="pdvSelected = this.checked ? new Set(matrizClienteProductoData().map(r=>r.pdv)) : new Set(); renderContent();"></th><th>Cliente / PDV</th><th>Canal</th>${PRODUCTOS_MAPA.map(p=>`<th>${p.n}</th>`).join('')}</tr></thead>
+      <tbody>
+      ${data.map(row=>`<tr style="${pdvSelected.has(row.pdv)?'background:rgba(139,92,246,.05)':''}">
+        <td><input type="checkbox" ${pdvSelected.has(row.pdv)?'checked':''} onchange="togglePdvSelected('${row.pdv}')"></td>
+        <td style="font-weight:700">${row.pdv}</td>
+        <td>${row.canal}</td>
+        ${row.cols.map(c=>`<td style="text-align:center">${c.compra?`<span class="pill green">✓ ${c.vol}u</span>`:`<span class="pill gray">—</span>`}</td>`).join('')}
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div class="foot-note">Lista completa: todos los clientes/PDVs del universo × todos los productos del portfolio. ✓ = compró en el período (con volumen estimado); — = no compró.</div>
+  `;
+}
 function askNexusMapa(q){
   q = (q||'').trim();
   if(!q) return;
@@ -2047,6 +2199,16 @@ function generateNexusResponseMapa(tab,q){
     diagnostico = `La promo "${promoForm.nombre}" proyecta ${moneyK(c.revenue)} de revenue con ${c.margenPct.toFixed(0)}% de margen y ROI estimado de ${c.roi.toFixed(0)}%.`;
     insight = c.roi>=50 ? 'El ROI proyectado es sólido — el riesgo principal es de ejecución (cobertura de PDVs), no de diseño de la promo.' : 'El ROI proyectado es ajustado — conviene revisar el descuento o el volumen esperado antes de lanzar.';
     iniciativas = ['Confirmar el punto de equilibrio con RGM antes de aprobar.', 'Priorizar los PDVs con mejor historial de cumplimiento.', 'Agendar una lectura semanal para ajustar mecánica si el real se desvía del plan.'];
+  } else if(tab==='matriz'){
+    const data = matrizClienteProductoData();
+    const conteoPorProducto = PRODUCTOS_MAPA.map(p=>({n:p.n, compradores: data.filter(r=>r.cols.find(c=>c.producto===p.n).compra).length}));
+    const masExclusivo = [...conteoPorProducto].sort((a,b)=>a.compradores-b.compradores)[0];
+    const matchCount = matrizMatchCount(data);
+    diagnostico = matchCount>0
+      ? `Con el filtro actual (Compró: ${matrizFiltroCompra.join(', ')||'—'} · No compró: ${matrizFiltroNoCompra.join(', ')||'—'}) hay ${matchCount} clientes/PDVs que cumplen la condición.`
+      : `"${masExclusivo.n}" es el producto con menos compradores (${masExclusivo.compradores} de ${data.length}) — el mejor candidato para una dinámica de cross-selling dirigida.`;
+    insight = 'Cruzar "compró testigo, no compró objetivo" es la forma más directa de armar un grupo de cross-selling accionable, en vez de apuntar a todo el universo por igual.';
+    iniciativas = ['Elegí un producto con alta compra como "Compró" y el producto a introducir como "No compró".', 'Guardá el grupo resultante con un nombre descriptivo.', 'Usá ese grupo directo en RGM para diseñar la dinámica de cross-selling.'];
   } else {
     diagnostico = `Sobre "${q}": en la zona seleccionada hay PDVs con estados mixtos entre Comprador, Potencial y No comprador — ver el detalle en la tabla de PDVs y ranking.`;
     insight = 'No tengo un caso de uso específico armado para esta pregunta en el mockup — en producción, Nexus AI cruzaría esto con el universo real de PDVs y el histórico de compra.';
@@ -2084,6 +2246,7 @@ function mapaAnalysisBody(){
   if(mapaAnalysisTab==='pdvs') body = pdvsTabHtml();
   else if(mapaAnalysisTab==='mix') body = mixTabHtml();
   else if(mapaAnalysisTab==='oportunidad') body = oportunidadTabHtml();
+  else if(mapaAnalysisTab==='matriz') body = matrizTabHtml();
   else body = activacionTabHtml();
   return body + nexusChatPanelHtmlMapa();
 }
@@ -2179,6 +2342,7 @@ function stMapa(){
         <div class="chip ${mapaAnalysisTab==='mix'?'active-chip':''}" onclick="mapaAnalysisTab='mix';renderContent()">Productos y mix</div>
         <div class="chip ${mapaAnalysisTab==='oportunidad'?'active-chip':''}" onclick="mapaAnalysisTab='oportunidad';renderContent()">Oportunidad SKU</div>
         <div class="chip ${mapaAnalysisTab==='activacion'?'active-chip':''}" onclick="mapaAnalysisTab='activacion';renderContent()">Activación y seguimiento</div>
+        <div class="chip ${mapaAnalysisTab==='matriz'?'active-chip':''}" onclick="mapaAnalysisTab='matriz';renderContent()">Matriz Cliente × Producto</div>
       </div>
       ${mapaAnalysisBody()}
     </div>
