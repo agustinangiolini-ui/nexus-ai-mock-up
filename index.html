@@ -372,13 +372,14 @@ let promoForm = {
   margenObjetivo: 34,
   hipotesis: 'Convertir PDVs que ya compran el SKU testigo con una oferta acotada, cuidando margen.',
 };
-let mapaChatMessages = { pdvs: [], mix: [], oportunidad: [], activacion: [], matriz: [] };
+let mapaChatMessages = { pdvs: [], mix: [], oportunidad: [], activacion: [], matriz: [], segmentacion: [] };
 const MAPA_CHAT_SUGGESTIONS = {
   pdvs: ['¿Qué PDVs tienen mayor GAP de oportunidad?', '¿Qué distribuidor tiene más PDVs sin activar?', '¿Qué canal tiene menor cobertura?'],
   mix: ['¿Qué SKU está más lejos del mix objetivo?', '¿Qué productos tienen mejor tendencia?', '¿Dónde conviene reforzar distribución numérica?'],
   oportunidad: ['¿Cuál es la oportunidad total de la zona?', '¿Qué PDV conviene activar primero?', '¿Cuánto volumen podemos capturar este mes?'],
   activacion: ['¿Cómo viene el ROI de la promo activa?', '¿Qué promo está más desviada del plan?', '¿Conviene extender la duración de la promo?'],
   matriz: ['¿Qué grupo de clientes conviene armar para cross-selling?', '¿Qué producto tiene más compradores exclusivos?', '¿Qué combinación de compra es más común?'],
+  segmentacion: ['¿Qué grupo tiene mayor riesgo de abandono?', '¿Cuántos clientes cayeron vs. el año pasado?', '¿Qué dinámica conviene para reactivar clientes inactivos?'],
 };
 let stChatMessages = { sellin: [], sellout: [], mercado: [], contexto: [] };
 const ST_CHAT_SUGGESTIONS = {
@@ -2173,6 +2174,139 @@ function matrizTabHtml(){
     <div class="foot-note">Lista completa: todos los clientes/PDVs del universo × todos los productos del portfolio. ✓ = compró en el período (con volumen estimado); — = no compró.</div>
   `;
 }
+/* ---------- Segmentación avanzada de clientes (amplitud de mix + comportamiento en el tiempo) ---------- */
+function segmentacionData(){
+  const s = fseed()+'segm';
+  const matriz = matrizClienteProductoData();
+  const totalProductos = PRODUCTOS_MAPA.length;
+  return PDVS_MAPA.map(p=>{
+    const mrow = matriz.find(r=>r.pdv===p.n);
+    const nProductos = mrow.cols.filter(c=>c.compra).length;
+    const seed = s+p.n;
+    const base = monthlySeries(180, seed+'mensual', 0.015, .5).map(v=>Math.max(0,Math.round(v)));
+    const actividad = MESES.map(m=> rand01(hash(seed+'act'+m)) > 0.24);
+    const volMensual = base.map((v,idx)=> actividad[idx] ? v : 0);
+    let mesesSinComprar = 0;
+    for(let idx=volMensual.length-1; idx>=0; idx--){ if(volMensual[idx]===0) mesesSinComprar++; else break; }
+    const ultimoMes = volMensual[volMensual.length-1];
+    const mesAnterior = volMensual[volMensual.length-2] ?? 0;
+    const historico = volMensual.slice(0,-1);
+    const avgHistorico = historico.length ? historico.reduce((a,b)=>a+b,0)/historico.length : 0;
+    const vsPromedioPct = avgHistorico>0 ? ((ultimoMes-avgHistorico)/avgHistorico*100) : (ultimoMes>0?0:-100);
+    const vsPeriodoAnteriorPct = mesAnterior>0 ? ((ultimoMes-mesAnterior)/mesAnterior*100) : (ultimoMes>0?0:-100);
+    const volAnioAnterior = Math.max(0, Math.round(vary(180, seed+'anioant', .5)));
+    const vsAnioAnteriorPct = volAnioAnterior>0 ? ((ultimoMes-volAnioAnterior)/volAnioAnterior*100) : (ultimoMes>0?0:-100);
+    const churn = mesesSinComprar>=2 || vsPromedioPct<=-30;
+    return { pdv:p.n, canal:p.canal, dist:p.dist, nProductos, totalProductos, volMensual, mesesSinComprar, ultimoMes, mesAnterior, avgHistorico, vsPromedioPct, vsPeriodoAnteriorPct, volAnioAnterior, vsAnioAnteriorPct, churn };
+  });
+}
+function selectPdvsPorCantidadProductos(n){
+  pdvSelected = new Set(segmentacionData().filter(r=>r.nProductos===n).map(r=>r.pdv));
+  renderContent();
+}
+function selectPdvsPorInactividad(minMeses){
+  pdvSelected = new Set(segmentacionData().filter(r=>r.mesesSinComprar>=minMeses).map(r=>r.pdv));
+  renderContent();
+}
+function selectPdvsPorCaidaPromedio(umbralPct){
+  pdvSelected = new Set(segmentacionData().filter(r=>r.vsPromedioPct<=umbralPct).map(r=>r.pdv));
+  renderContent();
+}
+function selectPdvsPorCaidaAnioAnterior(umbralPct){
+  pdvSelected = new Set(segmentacionData().filter(r=>r.vsAnioAnteriorPct<=umbralPct).map(r=>r.pdv));
+  renderContent();
+}
+function selectPdvsPorCaidaPeriodoAnterior(umbralPct){
+  pdvSelected = new Set(segmentacionData().filter(r=>r.vsPeriodoAnteriorPct<=umbralPct).map(r=>r.pdv));
+  renderContent();
+}
+function selectPdvsPorChurn(){
+  pdvSelected = new Set(segmentacionData().filter(r=>r.churn).map(r=>r.pdv));
+  renderContent();
+}
+function segmentacionTabHtml(){
+  const data = segmentacionData();
+  const totalProductos = PRODUCTOS_MAPA.length;
+  const porCantidad = Array.from({length: totalProductos+1}, (_,n)=>({n, count: data.filter(r=>r.nProductos===n).length}));
+  const inactividad = [1,2,3].map(m=>({m, count: data.filter(r=>r.mesesSinComprar>=m).length}));
+  const caidaPromedio = [-20,-40].map(u=>({u, count: data.filter(r=>r.vsPromedioPct<=u).length}));
+  const caidaAnio = [-20,-40].map(u=>({u, count: data.filter(r=>r.vsAnioAnteriorPct<=u).length}));
+  const caidaPeriodo = [-20,-40].map(u=>({u, count: data.filter(r=>r.vsPeriodoAnteriorPct<=u).length}));
+  const churnCount = data.filter(r=>r.churn).length;
+  const allChecked = data.length>0 && data.every(r=>pdvSelected.has(r.pdv));
+  const pctPill = (v)=> `<span class="pill ${v<=-20?'red':(v<0?'orange':'green')}">${pctStr(v)}</span>`;
+  return `
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Segmentar clientes para dinámicas correctivas</h3>
+      <div class="panel-sub">Armá grupos por amplitud de mix (cuántos productos compran) o por comportamiento en el tiempo (caída, inactividad) — cada grupo queda disponible directo en RGM para diseñar la dinámica que corresponda.</div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Por cantidad de productos comprados (de ${totalProductos} del portfolio):</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${porCantidad.map(x=>`<span class="pill ${x.n===0?'red':(x.n===totalProductos?'green':'orange')}" style="cursor:pointer" onclick="selectPdvsPorCantidadProductos(${x.n})">${x.n===0?'🚫 No compran ninguno':(x.n===totalProductos?'⭐ Compran todos':`Compran ${x.n} de ${totalProductos}`)} (${x.count})</span>`).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Por inactividad reciente (meses consecutivos sin comprar nada):</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${inactividad.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorInactividad(${x.m})">🕑 ${x.m}+ mes${x.m===1?'':'es'} sin comprar (${x.count})</span>`).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Comprando menos que su propio promedio histórico:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${caidaPromedio.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaPromedio(${x.u})">📉 Caída ${x.u}% o más vs. su promedio (${x.count})</span>`).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Vs. mismo período del año anterior:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${caidaAnio.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaAnioAnterior(${x.u})">📅 Caída ${x.u}% o más YoY (${x.count})</span>`).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Vs. período inmediatamente anterior:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${caidaPeriodo.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaPeriodoAnterior(${x.u})">⏮️ Caída ${x.u}% o más vs. período anterior (${x.count})</span>`).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Combinado:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span class="pill pink" style="cursor:pointer" onclick="selectPdvsPorChurn()">🚨 Riesgo de abandono — 2+ meses sin comprar o caída de 30%+ vs. su promedio (${churnCount})</span>
+        </div>
+      </div>
+
+      <div class="foot-note" style="margin-top:12px">Tocá cualquier chip para tildar automáticamente los PDVs que cumplen esa condición en la tabla de abajo (reemplaza la selección anterior). También podés tildar manualmente fila por fila.</div>
+      ${pdvGrupoGuardarHtml()}
+    </div>
+    <div style="overflow-x:auto">
+    <table class="table-compact">
+      <thead><tr><th><input type="checkbox" ${allChecked?'checked':''} onchange="pdvSelected = this.checked ? new Set(segmentacionData().map(r=>r.pdv)) : new Set(); renderContent();"></th><th>Cliente / PDV</th><th>Canal</th><th>Productos</th><th>Meses sin comprar</th><th>Último mes</th><th>vs. Promedio propio</th><th>vs. Año anterior</th><th>vs. Período anterior</th><th>Riesgo</th></tr></thead>
+      <tbody>
+      ${data.map(r=>`<tr style="${pdvSelected.has(r.pdv)?'background:rgba(139,92,246,.05)':''}">
+        <td><input type="checkbox" ${pdvSelected.has(r.pdv)?'checked':''} onchange="togglePdvSelected('${r.pdv}')"></td>
+        <td style="font-weight:700">${r.pdv}</td>
+        <td>${r.canal}</td>
+        <td>${r.nProductos} / ${r.totalProductos}</td>
+        <td>${r.mesesSinComprar>0?`<span class="pill red">${r.mesesSinComprar}</span>`:'<span class="pill green">0</span>'}</td>
+        <td>${r.ultimoMes} u</td>
+        <td>${pctPill(r.vsPromedioPct)}</td>
+        <td>${pctPill(r.vsAnioAnteriorPct)}</td>
+        <td>${pctPill(r.vsPeriodoAnteriorPct)}</td>
+        <td>${r.churn?'<span class="pill pink">🚨 Sí</span>':'<span class="pill gray">No</span>'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div class="foot-note">Lista completa del universo de PDVs con su comportamiento de compra. "Producto" = cuántos de los ${totalProductos} SKUs del portfolio compró en el período. Las comparaciones porcentuales son vs. su propio historial mensual, el mismo período del año anterior y el período inmediatamente anterior.</div>
+  `;
+}
 function askNexusMapa(q){
   q = (q||'').trim();
   if(!q) return;
@@ -2209,6 +2343,14 @@ function generateNexusResponseMapa(tab,q){
       : `"${masExclusivo.n}" es el producto con menos compradores (${masExclusivo.compradores} de ${data.length}) — el mejor candidato para una dinámica de cross-selling dirigida.`;
     insight = 'Cruzar "compró testigo, no compró objetivo" es la forma más directa de armar un grupo de cross-selling accionable, en vez de apuntar a todo el universo por igual.';
     iniciativas = ['Elegí un producto con alta compra como "Compró" y el producto a introducir como "No compró".', 'Guardá el grupo resultante con un nombre descriptivo.', 'Usá ese grupo directo en RGM para diseñar la dinámica de cross-selling.'];
+  } else if(tab==='segmentacion'){
+    const data = segmentacionData();
+    const churnCount = data.filter(r=>r.churn).length;
+    const sinComprar = data.filter(r=>r.mesesSinComprar>=1).length;
+    const caidaYoy = data.filter(r=>r.vsAnioAnteriorPct<=-20).length;
+    diagnostico = `${churnCount} de ${data.length} clientes están en riesgo de abandono (2+ meses sin comprar o caída de 30%+ vs. su promedio), ${sinComprar} no compraron nada el último mes, y ${caidaYoy} caen 20% o más vs. el mismo período del año anterior.`;
+    insight = 'Cada segmento pide una dinámica distinta: apertura para los que no compran ningún producto, reactivación para los inactivos, y recupero de volumen para los que caen vs. su propio historial o vs. el año anterior — mezclarlos en una sola promo diluye el mensaje y el ROI.';
+    iniciativas = ['Armar un grupo separado para "riesgo de abandono" y priorizarlo con la dinámica más agresiva.', 'A los que compran pocos productos, apuntarles con cross-selling (ver pestaña Matriz) en vez de descuento.', 'Guardar cada grupo con nombre descriptivo y usarlo en RGM para que la dinámica quede direccionada solo a ese segmento.'];
   } else {
     diagnostico = `Sobre "${q}": en la zona seleccionada hay PDVs con estados mixtos entre Comprador, Potencial y No comprador — ver el detalle en la tabla de PDVs y ranking.`;
     insight = 'No tengo un caso de uso específico armado para esta pregunta en el mockup — en producción, Nexus AI cruzaría esto con el universo real de PDVs y el histórico de compra.';
@@ -2247,6 +2389,7 @@ function mapaAnalysisBody(){
   else if(mapaAnalysisTab==='mix') body = mixTabHtml();
   else if(mapaAnalysisTab==='oportunidad') body = oportunidadTabHtml();
   else if(mapaAnalysisTab==='matriz') body = matrizTabHtml();
+  else if(mapaAnalysisTab==='segmentacion') body = segmentacionTabHtml();
   else body = activacionTabHtml();
   return body + nexusChatPanelHtmlMapa();
 }
@@ -2343,6 +2486,7 @@ function stMapa(){
         <div class="chip ${mapaAnalysisTab==='oportunidad'?'active-chip':''}" onclick="mapaAnalysisTab='oportunidad';renderContent()">Oportunidad SKU</div>
         <div class="chip ${mapaAnalysisTab==='activacion'?'active-chip':''}" onclick="mapaAnalysisTab='activacion';renderContent()">Activación y seguimiento</div>
         <div class="chip ${mapaAnalysisTab==='matriz'?'active-chip':''}" onclick="mapaAnalysisTab='matriz';renderContent()">Matriz Cliente × Producto</div>
+        <div class="chip ${mapaAnalysisTab==='segmentacion'?'active-chip':''}" onclick="mapaAnalysisTab='segmentacion';renderContent()">Segmentación de clientes</div>
       </div>
       ${mapaAnalysisBody()}
     </div>
