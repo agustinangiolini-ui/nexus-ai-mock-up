@@ -383,12 +383,13 @@ const MAPA_CHAT_SUGGESTIONS = {
   matriz: ['¿Qué grupo de clientes conviene armar para cross-selling?', '¿Qué producto tiene más compradores exclusivos?', '¿Qué combinación de compra es más común?'],
   segmentacion: ['¿Qué grupo tiene mayor riesgo de abandono?', '¿Cuántos clientes cayeron vs. el año pasado?', '¿Qué dinámica conviene para reactivar clientes inactivos?'],
 };
-let stChatMessages = { sellin: [], sellout: [], mercado: [], contexto: [] };
+let stChatMessages = { sellin: [], sellout: [], mercado: [], contexto: [], mapa: [] };
 const ST_CHAT_SUGGESTIONS = {
   sellin: ['¿Cómo viene el volumen vs. el período filtrado?', '¿Qué cliente explica la mayor variación?', '¿Cómo está la deuda vencida?'],
   sellout: ['¿Cómo viene la venta neta reportada por los distribuidores?', '¿Hay brecha relevante entre sell-in y sell-out?', '¿Qué canal crece más en sell-out?'],
   mercado: ['¿Cómo viene nuestro share vs. la competencia?', '¿Qué tan cerca estamos del price index de paridad?', '¿Cómo evolucionó la distribución numérica?'],
   contexto: ['¿Cómo impacta la inflación en nuestros insumos?', '¿Qué tan alineados estamos a la inflación general?', '¿Cómo uso esto en el simulador de precio de RGM?'],
+  mapa: ['¿Qué zona tiene mayor oportunidad sin capturar?', '¿Cómo viene la cobertura vs. el universo real?', '¿Qué grupo de clientes conviene armar para RGM?'],
 };
 let rgmSim = {
   sku: SKUS[0], canal: CANALES[0], region: REGIONES[0], cliente: CLIENTES_SIM[0], clienteSellOut: CLIENTES_SELLOUT[0],
@@ -1063,10 +1064,14 @@ function generateNexusResponseST(tab,q){
     diagnostico = 'El panel de mercado (Nielsen/Scentia) muestra Vol Share, Val Share y Price Index propios vs. la competencia y marca propia del retail.';
     insight = 'Si el Price Index está por encima de 100 y el Val Share cae, probablemente el precio está espantando volumen — vale la pena cruzarlo con el Simulador de Elasticidad de RGM.';
     iniciativas = ['Revisar el Price Index vs. el competidor líder.', 'Si la Distribución Ponderada baja, priorizar los PDVs grandes primero.', 'Llevar el Price Index actual al Simulador de Precio de RGM para validar margen.'];
-  } else {
+  } else if(tab==='contexto'){
     diagnostico = 'El Contexto Macro muestra inflación general, de categoría (Alimentos) y el índice de canasta propia (insumos clave).';
     insight = 'El índice de canasta propia es el insumo directo del Simulador de Precio en RGM — si sube más rápido que la inflación general, hay presión de margen aunque el precio de venta acompañe la inflación.';
     iniciativas = ['Llevar la inflación del período al Simulador de Precio de RGM.', 'Comparar el índice de canasta propia contra el IPIM mayorista.', 'Si la brecha es grande, evaluar ajuste de precio antes del próximo cierre de mes.'];
+  } else {
+    diagnostico = 'El Mapa de Clientes muestra el universo de PDVs directos e indirectos, cobertura, y el detalle accionable (ranking, mix, oportunidad, matriz cliente-producto y segmentación).';
+    insight = 'Esta pestaña es el punto de partida para armar cualquier grupo de clientes accionable — cada sub-pestaña de abajo (PDVs y ranking, Matriz, Segmentación) tiene su propio asistente para profundizar en esa selección específica.';
+    iniciativas = ['Bajar a la sub-pestaña que corresponda (PDVs, Matriz o Segmentación) para armar el grupo.', 'Guardar el grupo con un nombre descriptivo.', 'Usar ese grupo directo en RGM para diseñar la dinámica.'];
   }
   return `
     <div class="nexus-block"><span class="nb-tag">📊 Diagnóstico</span><p>${diagnostico}</p></div>
@@ -2436,6 +2441,7 @@ function stMapa(){
 
   return `
     ${sectionTitle('Mapa de clientes','Directo (ERP) vs. Indirecto (canal tradicional) — con delimitación de zonas')}
+    ${nexusChatPanelHtmlST()}
     <div class="grid-2-stretch">
       <div class="panel" style="padding:10px">
         <div style="display:flex;gap:8px;align-items:center;margin:8px 8px 10px 8px;flex-wrap:wrap">
