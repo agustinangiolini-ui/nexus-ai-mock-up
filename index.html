@@ -359,6 +359,7 @@ let pdvGrupos = [];
 let pdvGrupoNombreDraft = '';
 let matrizFiltroCompra = [];
 let matrizFiltroNoCompra = [];
+let segmentacionCategoria = 'mix';
 let oportSkuTestigo = PRODUCTOS_MAPA[2].n;
 let oportSkuObjetivo = PRODUCTOS_MAPA[0].n;
 let promoForm = {
@@ -2235,54 +2236,49 @@ function segmentacionTabHtml(){
   const churnCount = data.filter(r=>r.churn).length;
   const allChecked = data.length>0 && data.every(r=>pdvSelected.has(r.pdv));
   const pctPill = (v)=> `<span class="pill ${v<=-20?'red':(v<0?'orange':'green')}">${pctStr(v)}</span>`;
+  const CATEGORIAS_SEGM = {
+    mix:         { label: '📦 Por cantidad de productos comprados', desc: `De ${totalProductos} productos del portfolio, cuántos compra cada cliente.` },
+    inactividad: { label: '🕑 Por inactividad reciente', desc: 'Meses consecutivos sin comprar nada.' },
+    promedio:    { label: '📉 Vs. su propio promedio histórico', desc: 'Comprando menos que su promedio mensual habitual.' },
+    anio:        { label: '📅 Vs. mismo período del año anterior', desc: 'Caída interanual (YoY) en el mes actual.' },
+    periodo:     { label: '⏮️ Vs. período inmediatamente anterior', desc: 'Caída mes contra mes.' },
+    churn:       { label: '🚨 Riesgo de abandono (combinado)', desc: '2+ meses sin comprar o caída de 30%+ vs. su promedio.' },
+  };
+  const cat = CATEGORIAS_SEGM[segmentacionCategoria] ? segmentacionCategoria : 'mix';
+  let opcionesHtml = '';
+  if(cat==='mix'){
+    opcionesHtml = porCantidad.map(x=>`<span class="pill ${x.n===0?'red':(x.n===totalProductos?'green':'orange')}" style="cursor:pointer" onclick="selectPdvsPorCantidadProductos(${x.n})">${x.n===0?'🚫 No compran ninguno':(x.n===totalProductos?'⭐ Compran todos':`Compran ${x.n} de ${totalProductos}`)} (${x.count})</span>`).join('');
+  } else if(cat==='inactividad'){
+    opcionesHtml = inactividad.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorInactividad(${x.m})">${x.m}+ mes${x.m===1?'':'es'} sin comprar (${x.count})</span>`).join('');
+  } else if(cat==='promedio'){
+    opcionesHtml = caidaPromedio.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaPromedio(${x.u})">Caída ${x.u}% o más vs. su promedio (${x.count})</span>`).join('');
+  } else if(cat==='anio'){
+    opcionesHtml = caidaAnio.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaAnioAnterior(${x.u})">Caída ${x.u}% o más YoY (${x.count})</span>`).join('');
+  } else if(cat==='periodo'){
+    opcionesHtml = caidaPeriodo.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaPeriodoAnterior(${x.u})">Caída ${x.u}% o más vs. período anterior (${x.count})</span>`).join('');
+  } else if(cat==='churn'){
+    opcionesHtml = `<span class="pill pink" style="cursor:pointer" onclick="selectPdvsPorChurn()">🚨 Riesgo de abandono (${churnCount})</span>`;
+  }
   return `
     <div class="panel" style="margin-bottom:14px">
       <h3>Segmentar clientes para dinámicas correctivas</h3>
-      <div class="panel-sub">Armá grupos por amplitud de mix (cuántos productos compran) o por comportamiento en el tiempo (caída, inactividad) — cada grupo queda disponible directo en RGM para diseñar la dinámica que corresponda.</div>
+      <div class="panel-sub">Elegí un criterio de segmentación y tocá la opción que corresponda — cada grupo queda disponible directo en RGM para diseñar la dinámica que corresponda.</div>
 
-      <div style="margin-top:14px">
-        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Por cantidad de productos comprados (de ${totalProductos} del portfolio):</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${porCantidad.map(x=>`<span class="pill ${x.n===0?'red':(x.n===totalProductos?'green':'orange')}" style="cursor:pointer" onclick="selectPdvsPorCantidadProductos(${x.n})">${x.n===0?'🚫 No compran ninguno':(x.n===totalProductos?'⭐ Compran todos':`Compran ${x.n} de ${totalProductos}`)} (${x.count})</span>`).join('')}
+      <div class="simbar" style="margin-top:14px">
+        <div class="simfield" style="min-width:300px"><label>Criterio de segmentación</label>
+          <select onchange="segmentacionCategoria=this.value;renderContent()">
+            ${Object.keys(CATEGORIAS_SEGM).map(k=>`<option value="${k}" ${k===cat?'selected':''}>${CATEGORIAS_SEGM[k].label}</option>`).join('')}
+          </select>
         </div>
       </div>
-
-      <div style="margin-top:14px">
-        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Por inactividad reciente (meses consecutivos sin comprar nada):</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${inactividad.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorInactividad(${x.m})">🕑 ${x.m}+ mes${x.m===1?'':'es'} sin comprar (${x.count})</span>`).join('')}
-        </div>
+      <div class="nexus-block" style="margin-top:10px;background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 14px">
+        <p style="margin:0"><strong>${CATEGORIAS_SEGM[cat].label}:</strong> ${CATEGORIAS_SEGM[cat].desc}</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">
+        ${opcionesHtml}
       </div>
 
-      <div style="margin-top:14px">
-        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Comprando menos que su propio promedio histórico:</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${caidaPromedio.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaPromedio(${x.u})">📉 Caída ${x.u}% o más vs. su promedio (${x.count})</span>`).join('')}
-        </div>
-      </div>
-
-      <div style="margin-top:14px">
-        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Vs. mismo período del año anterior:</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${caidaAnio.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaAnioAnterior(${x.u})">📅 Caída ${x.u}% o más YoY (${x.count})</span>`).join('')}
-        </div>
-      </div>
-
-      <div style="margin-top:14px">
-        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Vs. período inmediatamente anterior:</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${caidaPeriodo.map(x=>`<span class="pill orange" style="cursor:pointer" onclick="selectPdvsPorCaidaPeriodoAnterior(${x.u})">⏮️ Caída ${x.u}% o más vs. período anterior (${x.count})</span>`).join('')}
-        </div>
-      </div>
-
-      <div style="margin-top:14px">
-        <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:6px">Combinado:</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          <span class="pill pink" style="cursor:pointer" onclick="selectPdvsPorChurn()">🚨 Riesgo de abandono — 2+ meses sin comprar o caída de 30%+ vs. su promedio (${churnCount})</span>
-        </div>
-      </div>
-
-      <div class="foot-note" style="margin-top:12px">Tocá cualquier chip para tildar automáticamente los PDVs que cumplen esa condición en la tabla de abajo (reemplaza la selección anterior). También podés tildar manualmente fila por fila.</div>
+      <div class="foot-note" style="margin-top:12px">Tocá cualquier chip para tildar automáticamente los PDVs que cumplen esa condición en la tabla de abajo (reemplaza la selección anterior). También podés tildar manualmente fila por fila, o cambiar de criterio arriba sin perder la tabla de referencia.</div>
       ${pdvGrupoGuardarHtml()}
     </div>
     <div style="overflow-x:auto">
