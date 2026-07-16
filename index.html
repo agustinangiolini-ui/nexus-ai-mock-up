@@ -359,6 +359,7 @@ let pdvGrupos = [];
 let pdvGrupoNombreDraft = '';
 let matrizFiltroCompra = [];
 let matrizFiltroNoCompra = [];
+let matrizIdentificado = false;
 let segmentacionCategoria = 'mix';
 let oportSkuTestigo = PRODUCTOS_MAPA[2].n;
 let oportSkuObjetivo = PRODUCTOS_MAPA[0].n;
@@ -1765,17 +1766,18 @@ function pdvGrupoGuardarHtml(){
         <button class="btn" ${pdvSelected.size===0?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="savePdvGrupo()">💾 Guardar grupo (${pdvSelected.size} PDV${pdvSelected.size===1?'':'s'})</button>
       </div>
     </div>
-    ${pdvGrupos.length ? `
+    <div class="foot-note" style="margin-top:6px">Podés guardar varios grupos distintos: armá una selección, nombrala y guardala: la selección se vacía y queda lista para armar el próximo grupo (con otro criterio o desde otra pestaña) sin perder los anteriores.</div>
     <div style="margin-top:14px">
-      <div class="panel-sub" style="margin-bottom:6px">Grupos guardados</div>
+      <div class="panel-sub" style="margin-bottom:6px">Grupos guardados${pdvGrupos.length?` (${pdvGrupos.length})`:''}</div>
+      ${pdvGrupos.length ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px">
         ${pdvGrupos.map(g=>`<span class="pill pink" style="display:inline-flex;align-items:center;gap:6px">
           ${g.nombre} (${g.pdvs.length})
           <a style="color:inherit;text-decoration:underline;cursor:pointer" onclick="useGrupoInRgm('${g.id}')">usar en RGM</a>
           <span style="cursor:pointer" onclick="removePdvGrupo('${g.id}')">✕</span>
         </span>`).join('')}
-      </div>
-    </div>` : ''}
+      </div>` : `<div style="font-size:11.5px;color:var(--text-dim)">Todavía no guardaste ningún grupo.</div>`}
+    </div>
   `;
 }
 function pdvsTabHtml(){
@@ -2123,13 +2125,22 @@ function matrizMatchCount(data){
 }
 function toggleMatrizFiltro(tipo, producto){
   const arr = tipo==='compra' ? matrizFiltroCompra : matrizFiltroNoCompra;
+  const otroArr = tipo==='compra' ? matrizFiltroNoCompra : matrizFiltroCompra;
   const idx = arr.indexOf(producto);
-  if(idx>=0) arr.splice(idx,1); else arr.push(producto);
+  if(idx>=0){
+    arr.splice(idx,1);
+  } else {
+    arr.push(producto);
+    const otroIdx = otroArr.indexOf(producto); // un producto no puede estar en "Compró" y "No compró" a la vez
+    if(otroIdx>=0) otroArr.splice(otroIdx,1);
+  }
+  matrizIdentificado = false;
   renderContent();
 }
 function selectPdvsPorCompra(){
   const data = matrizClienteProductoData();
   pdvSelected = new Set(data.filter(matrizMatch).map(r=>r.pdv));
+  matrizIdentificado = true;
   renderContent();
 }
 function matrizTabHtml(){
@@ -2154,8 +2165,12 @@ function matrizTabHtml(){
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px">
         <button class="btn" ${!hayFiltro?'disabled style="opacity:.5;cursor:not-allowed"':''} onclick="selectPdvsPorCompra()">🔍 Identificar clientes (${matchCount})</button>
-        ${hayFiltro ? `<span class="pill gray" style="cursor:pointer" onclick="matrizFiltroCompra=[];matrizFiltroNoCompra=[];renderContent()">Limpiar filtros</span>` : ''}
+        ${hayFiltro ? `<span class="pill gray" style="cursor:pointer" onclick="matrizFiltroCompra=[];matrizFiltroNoCompra=[];matrizIdentificado=false;renderContent()">Limpiar filtros</span>` : ''}
       </div>
+      ${matrizIdentificado ? (matchCount>0
+        ? `<div class="nexus-block" style="margin-top:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:8px 14px"><p style="margin:0">✅ Se tildaron <strong>${matchCount} cliente${matchCount===1?'':'s'}</strong> en la tabla de abajo. Nombrá el grupo y guardalo.</p></div>`
+        : `<div class="nexus-block" style="margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:8px 14px"><p style="margin:0">⚠️ Ningún cliente cumple esta combinación de filtros — probá con otra combinación de productos.</p></div>`
+      ) : ''}
       <div class="foot-note" style="margin-top:10px">Al identificar, los clientes que cumplen la condición quedan tildados en la tabla de abajo. Nombralos y guardalos como grupo, y después elegí ese grupo en RGM › Simulador de dinámica promocional para direccionar la promo solo a ellos.</div>
       ${pdvGrupoGuardarHtml()}
     </div>
