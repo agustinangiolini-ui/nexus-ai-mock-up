@@ -2289,8 +2289,9 @@ function segmentacionTabHtml(){
       <div class="nexus-block" style="margin-top:10px;background:var(--accent-soft);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 14px">
         <p style="margin:0"><strong>${CATEGORIAS_SEGM[cat].label}:</strong> ${CATEGORIAS_SEGM[cat].desc}</p>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center">
         ${opcionesHtml}
+        ${pdvSelected.size>0 ? `<span class="pill gray" style="cursor:pointer" onclick="pdvSelected=new Set();renderContent()">Limpiar selección</span>` : ''}
       </div>
 
       <div class="foot-note" style="margin-top:12px">Tocá cualquier chip para tildar automáticamente los PDVs que cumplen esa condición en la tabla de abajo (reemplaza la selección anterior). También podés tildar manualmente fila por fila, o cambiar de criterio arriba sin perder la tabla de referencia.</div>
