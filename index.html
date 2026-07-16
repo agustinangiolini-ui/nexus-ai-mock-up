@@ -362,7 +362,7 @@ let matrizFiltroCompra = [];
 let matrizFiltroNoCompra = [];
 let matrizIdentificado = false;
 let segmentacionCategoria = 'mix';
-let oportSkuTestigo = PRODUCTOS_MAPA[2].n;
+let oportSkuTestigos = [PRODUCTOS_MAPA[2].n];
 let oportSkuObjetivo = PRODUCTOS_MAPA[0].n;
 let promoForm = {
   nombre: 'Activación SKU objetivo en zona seleccionada',
@@ -398,12 +398,7 @@ let rgmSim = {
   objetivo: RGM_OBJETIVOS[0], caracteristicas: '15% off en segunda unidad, tope 200 cajas por PDV', hipotesis: 'Recuperar volumen en PDVs con caída de compra reciente sin resignar margen objetivo.',
 };
 let iaResult = null;
-let rgmDinamicas = [
-  {n:'Descuento activación GBA', cl:'Distribuidora Norte', estado:'En curso', vsObj:94, roi:1.6},
-  {n:'Up-selling Pack x6', cl:'Cadena Metro', estado:'En curso', vsObj:108, roi:2.1},
-  {n:'Cross-sell Línea Premium', cl:'Hiper Andes', estado:'Planificada', vsObj:0, roi:0},
-  {n:'Descuento fin de mes', cl:'Mayorista Sur', estado:'Finalizada', vsObj:101, roi:1.3},
-];
+let rgmDinamicas = [];
 let rgmChatMessages = [];
 const RGM_CHAT_SUGGESTIONS = [
   '¿Dónde conviene invertir el budget promocional este mes?',
@@ -1920,10 +1915,20 @@ function mixTabHtml(){
     </div>
   `;
 }
+function toggleOportSkuTestigo(producto){
+  const idx = oportSkuTestigos.indexOf(producto);
+  if(idx>=0){
+    if(oportSkuTestigos.length>1) oportSkuTestigos.splice(idx,1);
+  } else {
+    oportSkuTestigos.push(producto);
+  }
+  renderContent();
+}
 function stOportunidadData(){
-  const s = fseed()+'mapopor'+oportSkuTestigo+oportSkuObjetivo;
+  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivo;
   const pdvsZona = Math.max(1, Math.round(vary(12, s+'z', .3)));
-  const compranTestigo = Math.max(0, Math.round(vary(pdvsZona*0.5, s+'ct', .35)));
+  const factorTestigos = Math.min(0.92, 0.5 + (oportSkuTestigos.length-1)*0.14);
+  const compranTestigo = Math.max(0, Math.round(vary(pdvsZona*factorTestigos, s+'ct', .35)));
   const noCompranObjetivo = Math.max(0, Math.round(vary(pdvsZona*0.28, s+'nco', .35)));
   const altoPotencial = Math.max(0, Math.round(vary(2, s+'ap', .5)));
   const gapConversion = Math.max(0, noCompranObjetivo - Math.round(vary(1,s+'gc',.6)));
@@ -1934,7 +1939,7 @@ function stOportunidadData(){
 }
 function oportunidadTabHtml(){
   const d = stOportunidadData();
-  const s = fseed()+'mapopor'+oportSkuTestigo+oportSkuObjetivo;
+  const s = fseed()+'mapopor'+oportSkuTestigos.join('+')+oportSkuObjetivo;
   const recNames = ['Café Botánico Norte','Café Serrano','Autoservicio Honduras'];
   const recRows = recNames.map((n,i)=>{
     const p = PDVS_MAPA.find(x=>x.n===n);
@@ -1947,13 +1952,14 @@ function oportunidadTabHtml(){
     <div class="panel">
       <h3>Qué está mirando Nexus</h3>
       <div class="panel-sub">El SKU testigo marca dónde la categoría ya funciona. El SKU objetivo es el producto que queremos introducir o acelerar en esos mismos PDVs.</div>
-      <div class="grid-2" style="margin-top:14px">
-        <div class="form-field"><label>SKU Testigo</label>
-          <select class="form-select" onchange="oportSkuTestigo=this.value;renderContent()">
-            ${PRODUCTOS_MAPA.map(p=>`<option ${p.n===oportSkuTestigo?'selected':''}>${p.n}</option>`).join('')}
-          </select>
+      <div style="margin-top:14px">
+        <div class="form-field">
+          <label>SKU Testigo <span style="font-weight:400;color:var(--text-dim)">— podés elegir más de uno</span></label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+            ${PRODUCTOS_MAPA.map(p=>`<span class="pill ${oportSkuTestigos.includes(p.n)?'green':'gray'}" style="cursor:pointer" onclick="toggleOportSkuTestigo('${p.n}')">${oportSkuTestigos.includes(p.n)?'✓ ':''}${p.n}</span>`).join('')}
+          </div>
         </div>
-        <div class="form-field"><label>SKU Objetivo</label>
+        <div class="form-field" style="max-width:320px;margin-top:14px"><label>SKU Objetivo</label>
           <select class="form-select" onchange="oportSkuObjetivo=this.value;renderContent()">
             ${PRODUCTOS_MAPA.map(p=>`<option ${p.n===oportSkuObjetivo?'selected':''}>${p.n}</option>`).join('')}
           </select>
@@ -1961,7 +1967,7 @@ function oportunidadTabHtml(){
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-top:16px">
         ${kpiCard('PDVs Zona', num(d.pdvsZona,0), 0, 'Universo seleccionado')}
-        ${kpiCard('Compran Testigo', num(d.compranTestigo,0), 0, oportSkuTestigo)}
+        ${kpiCard('Compran Testigo', num(d.compranTestigo,0), 0, oportSkuTestigos.join(', '))}
         ${kpiCard('No Compran Objetivo', num(d.noCompranObjetivo,0), 0, oportSkuObjetivo)}
         ${kpiCard('Alto Potencial', num(d.altoPotencial,0), 0, 'Candidatos inmediatos')}
         ${kpiCard('Gap Conversión', num(d.gapConversion,0), 0, 'Compradores a capturar')}
@@ -2002,7 +2008,9 @@ function promoCalc(){
 }
 function seguimientoPromosData(){
   const first = promoCalc();
+  const nuevas = rgmDinamicas.map((d,i)=>({...d, removable:true, idx:i}));
   return [
+    ...nuevas,
     {n: promoForm.nombre, ini:'2026-06-24', fin:'2026-07-24', estado:'En planificación', pdvsPlan:promoForm.pdvsObjetivo, pdvsReal:0, volPlan:first.cajas, volReal:0, factPlan:first.revenue, factReal:0, margenPlan:first.margenPct, margenDesvio:0, semanas:[0,0,0,0], proxima:'Validar mecánica con RGM, confirmar PDVs objetivo y cargar primera lectura semanal.'},
     {n:'Impulso Vodka Premium en CABA Norte', ini:'2026-06-03', fin:'2026-07-01', estado:'En ejecución', pdvsPlan:42, pdvsReal:27, volPlan:1680, volReal:1040, factPlan:76000, factReal:47000, margenPlan:35, margenDesvio:-18, semanas:[18,30,43,61], proxima:'Acelerar activación en PDVs con compra de Gin Botánico y sin Vodka Premium.'},
     {n:'Recuperación Espumante Brut en supermercados', ini:'2026-06-24', fin:'2026-07-21', estado:'En planificación', pdvsPlan:36, pdvsReal:0, volPlan:1440, volReal:0, factPlan:65000, factReal:0, margenPlan:32, margenDesvio:0, semanas:[0,0,0,0], proxima:'Validar inversión con RGM y alinear exhibición con distribuidores.'},
@@ -2011,10 +2019,14 @@ function seguimientoPromosData(){
 function promoCardHtml(p){
   const estadoPill = {'En planificación':'blue','En ejecución':'orange','Finalizada':'green'};
   return `
-  <div class="panel" style="margin-top:16px">
+  <div class="panel" style="margin-top:16px;${p.removable?'border-color:rgba(139,92,246,.35)':''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
       <div><h3 style="margin:0 0 4px 0">${p.n}</h3><div class="panel-sub">${p.ini} al ${p.fin}</div></div>
-      <span class="pill ${estadoPill[p.estado]||'blue'}">${p.estado}</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${p.removable?'<span class="pill pink">Guardada desde el simulador</span>':''}
+        <span class="pill ${estadoPill[p.estado]||'blue'}">${p.estado}</span>
+        ${p.removable?`<span class="pill red" style="cursor:pointer" onclick="removeRgmDinamica(${p.idx})">Quitar ✕</span>`:''}
+      </div>
     </div>
     <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
       <div><div class="panel-sub" style="margin-bottom:2px">PDVs Real / Plan</div><div style="font-size:19px;font-weight:700">${p.pdvsReal} / ${p.pdvsPlan}</div></div>
@@ -2326,7 +2338,7 @@ function generateNexusResponseMapa(tab,q){
     iniciativas = [`Priorizar activación de ${worst.n} en la zona seleccionada.`, 'Cruzar el listado de No Compradores con el universo de PDVs del canal principal.', 'Fijar un objetivo de DN a 60 días para ese SKU.'];
   } else if(tab==='oportunidad'){
     const d = stOportunidadData();
-    diagnostico = `Con ${oportSkuTestigo} como testigo y ${oportSkuObjetivo} como objetivo, hay ${d.gapConversion} PDVs con conversión pendiente sobre ${d.pdvsZona} en la zona.`;
+    diagnostico = `Con ${oportSkuTestigos.join(' + ')} como testigo${oportSkuTestigos.length>1?'s':''} y ${oportSkuObjetivo} como objetivo, hay ${d.gapConversion} PDVs con conversión pendiente sobre ${d.pdvsZona} en la zona.`;
     insight = `La oportunidad estimada de ${moneyK(d.oportunidadUsd)} se concentra en pocos PDVs de alto potencial — conviene priorizar antes de escalar a toda la zona.`;
     iniciativas = ['Usar los PDVs recomendados como piloto antes de escalar.', 'Confirmar disponibilidad de stock del SKU objetivo en el distribuidor asignado.', 'Medir conversión a 30 días post-activación.'];
   } else if(tab==='activacion'){
@@ -3387,12 +3399,14 @@ function viewRGM(){
 
     ${iaResult ? iaResultHtml() : (rgmManualForm ? rgmManualFormHtml() : `<div class="empty-state"><div class="ico">◇</div>Configurá los filtros y elegí cómo seguir: presioná "Sugerir con IA" para que Nexus AI proponga precio, targeting y volumen, o "Armar dinámica manualmente" para cargarla vos mismo directo al seguimiento.</div>`)}
 
+    <div id="rgmSeguimientoSection">
     ${sectionTitle('Seguimiento de promociones','Plan vs. real — activas, planificadas y finalizadas')}
     <div class="panel">
       <h3>Cómo leer esta sección</h3>
-      <div class="panel-sub">Cada tarjeta mezcla plan vs real. El plan viene de la dinámica diseñada en el Simulador de dinámica promocional de arriba. El real se simula desde las fuentes demo de ventas PDV/SKU, cobertura por zona y ejecución trade.</div>
+      <div class="panel-sub">Cada tarjeta mezcla plan vs real. El plan viene de la dinámica diseñada en el Simulador de dinámica promocional de arriba. El real se simula desde las fuentes demo de ventas PDV/SKU, cobertura por zona y ejecución trade. Las tarjetas marcadas "Guardada desde el simulador" son las que fuiste guardando con "Guardar esta dinámica en seguimiento" / "Guardar en seguimiento".</div>
     </div>
     ${seguimientoPromosData().map(promoCardHtml).join('')}
+    </div>
   `;
 }
 function rgmTracking(){
@@ -3410,19 +3424,44 @@ function rgmTracking(){
     <td><span class="pill red" style="cursor:pointer" onclick="removeRgmDinamica(${i})">Quitar</span></td>
   </tr>`).join('');
 }
+function rgmSeguimientoFechas(){
+  const hoy = new Date('2026-07-16');
+  const fin = new Date(hoy); fin.setDate(fin.getDate()+28);
+  const fmt = d=>d.toISOString().slice(0,10);
+  return {ini: fmt(hoy), fin: fmt(fin)};
+}
 function addRgmDinamica(source){
   const grupo = pdvGrupos.find(g=>g.id===rgmSim.grupoPdvId) || null;
   const clienteLabel = grupo ? `${grupo.nombre} (${grupo.pdvs.length} PDVs)`
     : (rgmSim.clienteSellOut!==CLIENTES_SELLOUT[0] ? rgmSim.clienteSellOut
     : (rgmSim.cliente!==CLIENTES_SIM[0] ? rgmSim.cliente : rgmSim.canal));
   const skuLabel = rgmSim.sku!==SKUS[0] ? ' — '+rgmSim.sku : '';
-  const nombre = `${rgmSim.tipo}${skuLabel}`;
+  const nombre = `${rgmSim.tipo}${skuLabel} — ${clienteLabel}`;
+  const {ini, fin} = rgmSeguimientoFechas();
   if(source==='ia' && iaResult){
-    rgmDinamicas.push({n:nombre, cl:clienteLabel, estado:'Planificada', vsObj:Math.round(100+iaResult.volIncPct), roi:iaResult.roi});
+    const r = iaResult;
+    const pdvsPlan = r.targeting.length;
+    rgmDinamicas.push({
+      n: nombre, ini, fin, estado:'En planificación',
+      pdvsPlan, pdvsReal:0,
+      volPlan: Math.round(r.volumenObjetivo), volReal:0,
+      factPlan: Math.round(r.volumenObjetivo*r.precioSugerido), factReal:0,
+      margenPlan: 30, margenDesvio:0,
+      semanas:[0,0,0,0],
+      proxima: `Validar mecánica con RGM, confirmar ${pdvsPlan} PDVs objetivo y cargar primera lectura semanal. ROI proyectado ${r.roi.toFixed(1)}x.`,
+    });
   } else {
-    rgmDinamicas.push({n:nombre, cl:clienteLabel, estado:'Planificada', vsObj:0, roi:0});
+    rgmDinamicas.push({
+      n: nombre, ini, fin, estado:'En planificación',
+      pdvsPlan: grupo?grupo.pdvs.length:12, pdvsReal:0,
+      volPlan: 1000, volReal:0, factPlan: 45000, factReal:0,
+      margenPlan: 30, margenDesvio:0,
+      semanas:[0,0,0,0],
+      proxima: 'Confirmar PDVs objetivo y cargar primera lectura semanal.',
+    });
   }
   renderContent();
+  setTimeout(()=>{ document.getElementById('rgmSeguimientoSection')?.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
 }
 function removeRgmDinamica(i){
   rgmDinamicas.splice(i,1);
@@ -3446,10 +3485,25 @@ function cancelRgmManualForm(){
 function saveRgmManualForm(){
   if(!rgmManualForm) return;
   const f = rgmManualForm;
-  rgmDinamicas.push({ n: f.nombre, cl: f.cliente, estado: f.estado, vsObj: f.volObjetivoPct, roi: f.roiEsperado });
+  const {ini, fin} = rgmSeguimientoFechas();
+  const estadoMap = {'Planificada':'En planificación','En curso':'En ejecución','Finalizada':'Finalizada'};
+  const estado = estadoMap[f.estado] || 'En planificación';
+  const avance = Math.max(0, (f.volObjetivoPct||0)/100);
+  const grupo = pdvGrupos.find(g=>g.id===rgmSim.grupoPdvId) || null;
+  const pdvsPlan = grupo ? grupo.pdvs.length : 12;
+  const volPlan = 1000, factPlan = 45000;
+  rgmDinamicas.push({
+    n: f.nombre, ini, fin, estado,
+    pdvsPlan, pdvsReal: estado==='En planificación' ? 0 : Math.round(pdvsPlan*Math.min(1,avance||0.3)),
+    volPlan, volReal: estado==='En planificación' ? 0 : Math.round(volPlan*Math.min(1,avance||0.3)),
+    factPlan, factReal: estado==='En planificación' ? 0 : Math.round(factPlan*Math.min(1,avance||0.3)),
+    margenPlan: 30, margenDesvio: f.volObjetivoPct ? (f.volObjetivoPct-100) : 0,
+    semanas: estado==='Finalizada' ? [100,100,100,100] : (estado==='En ejecución' ? [25,40,0,0] : [0,0,0,0]),
+    proxima: `ROI esperado ${Number(f.roiEsperado).toFixed(1)}x — cargar avance semanal.`,
+  });
   rgmManualForm = null;
   renderContent();
-  setTimeout(()=>{ document.getElementById('rgmSeguimientoPanel')?.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
+  setTimeout(()=>{ document.getElementById('rgmSeguimientoSection')?.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
 }
 function rgmManualFormHtml(){
   const f = rgmManualForm;
